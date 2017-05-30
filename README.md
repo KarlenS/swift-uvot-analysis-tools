@@ -4,7 +4,7 @@ Python wrappers for HEASoft tools to run through basic UVOT photometry
 
 Required software
 
-XPA, Python packages below
+XPA, HEASoft (at least for Swift), CALDB (with data for at least UVOT), Python packages (see requirements.txt)
 
 Setup
 
