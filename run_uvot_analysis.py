@@ -1,3 +1,4 @@
+import os.path
 import sys
 import glob
 import argparse 
@@ -22,7 +23,6 @@ def uvot_checker(filepaths):
     #launching a ds9 window
     d = ds9.DS9()
 
-
     for filepath in filepaths:
         iv = SourceImageViewer()
         iv.filepath = filepath
@@ -34,22 +34,54 @@ def uvot_checker(filepaths):
         x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
 
 
+def uvot_measurer(filepaths,measure=True):
+    #can try replacing this whole thing with a function on a single file and map iterator
+
+    from uvot_photometry import MeasureSource
+
+    photometry = {}
+
+    for filepath in filepaths:
+        measurer = MeasureSource(filepath)
+        filtr = measurer.band
+        if measure:
+            tmp = measurer.run_uvotsource()
+        
+        objphot = measurer.get_observation_data()
+        
+    return photometry
+
+
 def main():
 
     parser = argparse.ArgumentParser(description='Quick verification of image quality and regions selection for UVOT analysis.')
     parser.add_argument('-p',required=True, help='Parent directory of UVOT data structures (directories with names like 00030901252).')
+    parser.add_argument('-obs',default=None,help='If specified, will only look at data for a single observations: e.g. 00030901252')
     parser.add_argument('-f', help='File with list of directory names of UVOT data structures. Use this option if directory names do not start with 000 for some reason...')
     parser.add_argument('--check',action='store_true',default=False,help='View all images with the source marked to check observation quality.')
-    parser.add_argument('--detect',action='store_true',default=False,help='Run uvotdetect on all images')
+    parser.add_argument('--detect',action='store_true',default=False,help='Run uvotdetect on all images.')
+    parser.add_argument('--measure',action='store_true',default=False,help='Run uvotsource on all images to get photometry.')
+    parser.add_argument('--plot_only',action='store_true',default=False,help='Only plot light curves.')
     args = parser.parse_args()
 
-    filepaths = glob.iglob(args.p+'/000*/uvot/image/*sk.img.gz')#setting up filepaths
+    if not args.obs:
+        filepaths = glob.iglob('%s/000*/uvot/image/*sk.img.gz' %args.p)#setting up filepaths
+    else:
+        obspath = os.path.join(args.p,str(args.obs))
+        if os.path.exists(obspath):
+            filepaths = glob.iglob('%s/uvot/image/*sk.img.gz'%obspath)
+        else:
+            raise NameError('%s does not exist.' %obspath)
+
 
     if args.check:
         uvot_checker(filepaths)
 
     if args.detect:
         uvot_detecter(filepaths)
+
+    if args.measure:
+        photometry = uvot_measurer(filepaths,measure = not args.plot_only)
 
 if __name__ == '__main__':
     main()
