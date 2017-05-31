@@ -28,8 +28,10 @@ def uvot_checker(filepaths):
         iv.filepath = filepath
         iv.source_ra = '8:54:48.867'
         iv.source_dec = '+20:06:30.97'
+        iv.bkg_ra = '8:54:48.772'
+        iv.bkg_dec = '+20:05:32.576'
         iv.setup_frame(d)
-        x = raw_input('Viewing %s' %filepath)
+        x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
 
 
 def main():
