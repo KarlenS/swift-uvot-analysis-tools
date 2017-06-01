@@ -6,10 +6,10 @@ class SourceImageViewer(object):
 
     def __init__(self,filepath=''):
         self.filepath = filepath
-        self.source_ra = 0 
-        self.source_dec = 0
-        self.bkg_ra = 0 
-        self.bkg_dec = 0 
+        self.source_ra = None 
+        self.source_dec = None
+        self.bkg_ra = None
+        self.bkg_dec = None
 
     def open_fits(self,d):
         opencmd = "file %s" %self.filepath

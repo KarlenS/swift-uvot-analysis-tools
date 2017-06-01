@@ -3,9 +3,31 @@ import sys
 import glob
 import argparse 
 
+
+def correct_extinction(val, filtr, EBminV, mag = False):
+
+    '''assumes val expects flux densities in erg/s/cm2/Angstrom units, unless mag is True
+    
+    returns:
+        erg/s/cm2
+    '''
+
+    #from Poole et al. 2008 (MNRAS 383, 627-645)
+    central_wav = {'uu':3465.,'w1':2600.,'m2':2246.,'w2':1928.,'bb':4392.,'vv':5468.}
+    # derived from http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi
+    R_lambda = {'uu':4.89172,'w1':6.55663,'m2':9.15389,'w2':8.10997,'bb':4.00555,'vv':2.99692}
+    
+    A_lambda = R_lambda[filtr]*EBminV
+
+    if mag:
+        return val - R_lambda[filtr]*EBminV
+    else:
+        return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
+
 def uvot_detecter(filepaths):
     from source_position import PositionExtractor
     pos = PositionExtractor()
+    #hardcoded
     pos.source_ra = '8:54:48.867'
     pos.source_dec = '+20:06:30.97'
     for filepath in filepaths:
@@ -26,6 +48,7 @@ def uvot_checker(filepaths):
     for filepath in filepaths:
         iv = SourceImageViewer()
         iv.filepath = filepath
+        #hardcoded
         iv.source_ra = '8:54:48.867'
         iv.source_dec = '+20:06:30.97'
         iv.bkg_ra = '8:54:48.772'
@@ -38,9 +61,25 @@ def uvot_measurer(filepaths,measure=True):
     #can try replacing this whole thing with a function on a single file and map iterator
 
     from astropy.table import Table
+    from astropy import units as u
     from uvot_photometry import MeasureSource
 
-    ptab = Table(names=('filter','MJD','Mag','MagErr'),dtype=('S2','f8','f8','f8'))
+
+    ptab = Table(names=('filter','MJD','Mag','MagErr','FluxDensity','FluxDensityErr','FluxDensityJy','FluxDensityJyErr','FluxExtCorr','FluxExtcorrErr'),
+                            dtype=('S2','f8','f8','f8','f8','f8','f8','f8','f8','f8'))
+
+    ptab['MJD'].unit = u.d
+    ptab['Mag'].unit = u.mag
+    ptab['MagErr'].unit = u.mag
+    ptab['FluxDensity'].unit = u.erg/u.cm/u.cm/u.second/u.AA
+    ptab['FluxDensityErr'].unit = u.erg/u.cm/u.cm/u.second/u.AA
+    ptab['FluxDensityJy'].unit = u.Jy
+    ptab['FluxDensityJyErr'].unit = u.Jy
+    ptab['Flux'].unit = u.erg/u.cm/u.cm/u.second 
+    ptab['FluxErr'].unit = u.erg/u.cm/u.cm/u.second
+
+    #hardcoded
+    ebminv = 0.077/3.1
 
     for filepath in filepaths:
         measurer = MeasureSource(filepath)
@@ -49,10 +88,20 @@ def uvot_measurer(filepaths,measure=True):
             tmp = measurer.run_uvotsource()
          
         objphot = measurer.get_observation_data()
+
+        #getting extinction-corrected fluxes
+        flux = correct_extinction(objphot[-4],filtr,ebminv)
+        fluxerr = correct_extinction(objphot[-3],filtr,ebminv)
+        objphot.append(flux)
+        objphot.append(fluxerr)
+
         ptab.add_row(objphot)
 
+    #flux_extcorr = correct_exctinction(ptab['FluxDensity'],ptab['filter'],ebminv)
+    #fluxerr_extcorr = correct_exctinction(ptab['FluxDensityErr'],ptab['filter'],ebminv)
+    
 
-    return ptab
+    return ptab.group_by('filter')
         
 
 def main():
@@ -86,6 +135,7 @@ def main():
 
     if args.measure:
         photometry = uvot_measurer(filepaths,measure = not args.print_only)
+        photometry.write('OJ287_uvot_photometry_wExtCorr.dat',format='ascii.commented_header')
         photometry.write(args.o)
 
 if __name__ == '__main__':

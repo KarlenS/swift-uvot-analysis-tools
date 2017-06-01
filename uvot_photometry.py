@@ -53,5 +53,9 @@ class MeasureSource(object):
 
         mag = data['MAG'][0]
         magerr = data['MAG_ERR'][0]
+        flux = data['FLUX_AA'][0]
+        fluxerr = data['FLUX_AA_ERR'][0]
+        fluxj = data['FLUX_HZ'][0]
+        fluxjerr = data['FLUX_HZ_ERR'][0]
         obstime = self.get_observation_time()
-        return [self.band,obstime.mjd,mag,magerr]
+        return [self.band,obstime.mjd,mag,magerr,flux,fluxerr,fluxj,fluxjerr]

@@ -11,14 +11,15 @@ from astropy.coordinates import SkyCoord
 class PositionExtractor(object):
 
     def __init__(self):
+        #hardcoded
         self.source_ra = '8:54:48.867'
         self.source_dec = '+20:06:30.97'
-	self.bkg_ra =  '8:54:48.772'
-	self.bkg_dec = '+20:05:32.576'
+	    self.bkg_ra =  '8:54:48.772'
+	    self.bkg_dec = '+20:05:32.576'
         self.filepath = ''
         self.detect = ''
-	self.regfile = ''
-	self.bkgregfile = ''
+	    self.regfile = ''
+	    self.bkgregfile = ''
 
     def cleanup(self):
         try:
@@ -45,7 +46,7 @@ class PositionExtractor(object):
   
     def run_uvotimsum(self,inputFile, outputFile):
     	tmp = subprocess.Popen(["uvotimsum",inputFile,outputFile,'chatter=0','clobber=no','exclude=NONE'], stdout=subprocess.PIPE)
-  	tmp = tmp.communicate()
+  	    tmp = tmp.communicate()
 
     def getNearestSource(self):
         c = SkyCoord('%s %s' %(self.source_ra,self.source_dec),unit=(u.hourangle, u.deg))
@@ -56,18 +57,18 @@ class PositionExtractor(object):
 	    try:
 		#to keep things relatively clean, changing filepath to combined while remembering orignal name
 	        comb = '%s.comb' %self.filepath
-		orig = self.filepath 
+		    orig = self.filepath 
 	        self.run_uvotimsum(self.filepath,comb)
-		self.filepath = comb
+		    self.filepath = comb
 	        detect_out = self.run_uvotdetect(exp=None)
 	        data = fits.getdata(self.detect)
-		#once we have the data from combined, changing back filepath to original
-		self.filepath = orig
+		    #once we have the data from combined, changing back filepath to original
+		    self.filepath = orig
 	        print 'Combining and rerunning seems to have worked!'
 	    except:
-            	print 'Attempt to combine extensions failed. Defaulting to SIMBAD position.'
-            	self.createRegionFiles(c)
-            	return None
+            print 'Attempt to combine extensions failed. Defaulting to SIMBAD position.'
+            self.createRegionFiles(c)
+            return None
 
         if np.size(data) > 0:
             source_ind = np.argmin(np.abs(data['RA']-c.ra.value) + np.abs(data['DEC']-c.dec.value))
@@ -97,7 +98,7 @@ class PositionExtractor(object):
 
         outfile = path.join(dirpath,'detect_%s_%s.fits' %(obs,band))
         regfile = path.join(dirpath,'detect_%s_%s.reg' %(obs,band))
-	bkgregfile = path.join(dirpath,'back_%s_%s.reg' %(obs,band))
+	    bkgregfile = path.join(dirpath,'back_%s_%s.reg' %(obs,band))
 
         tmp = subprocess.Popen(['uvotdetect','infile=%s' %self.filepath,'outfile=%s' %outfile,'chatter=0','plotsrc=NO',
                                 'expfile=%s'%expfile,'threshold=3','clobber=YES'], stdout=subprocess.PIPE)
