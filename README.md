@@ -10,7 +10,7 @@ Python helper wrappers for HEASoft UVOT analysis tools.
 ```
 ## Required Software
 
-[XPA](http://ds9.si.edu/site/XPA.html) , [DS9](http://ds9.si.edu/site/Download.html), [HEASoft (at least for Swift)](https://heasarc.gsfc.nasa.gov/lheasoft/download.html), [CALDB](https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/caldb_install.html)[((with data for at least for Swift)](https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/swift/)
+[XPA](http://ds9.si.edu/site/XPA.html) , [DS9](http://ds9.si.edu/site/Download.html), [HEASoft (at least for Swift)](https://heasarc.gsfc.nasa.gov/lheasoft/download.html), [CALDB](https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/caldb_install.html)[(with data for at least for Swift)](https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/swift/)
 
 Python packages:
 ```bash
