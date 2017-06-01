@@ -52,7 +52,8 @@ The following will run uvotsource on all observations and store photometry data 
 $> python run_uvot_analysis.py -p /path/to/Swift/data --measure
 ```
 
-To only parse photometry data and store it in *MySource_photometry.cvs* (in csv format; same formats as supported by [astropy.table](http://docs.astropy.org/en/stable/table/io.html))
+To only parse photometry data and store it in *MySource_photometry.cvs* (in csv format; same formats as supported by [astropy.table](http://docs.astropy.org/en/stable/table/io.html)).
+
 ***NOTE*: Do this if *uvotsource* has already been run with --measure**
 ```bash
 $> python run_uvot_analysis.py -p /path/to/Swift/data --measure -o MySource_phometry.csv --print_only
