@@ -65,7 +65,7 @@ def main():
     parser.add_argument('--check',action='store_true',default=False,help='View all images with the source marked to check observation quality.')
     parser.add_argument('--detect',action='store_true',default=False,help='Run uvotdetect on all images.')
     parser.add_argument('--measure',action='store_true',default=False,help='Run uvotsource on all images to get photometry.')
-    parser.add_argument('--plot_only',action='store_true',default=False,help='Only plot light curves.')
+    parser.add_argument('--print_only',action='store_true',default=False,help='Only plot light curves.')
     args = parser.parse_args()
 
     if not args.obs:
@@ -85,7 +85,7 @@ def main():
         uvot_detecter(filepaths)
 
     if args.measure:
-        photometry = uvot_measurer(filepaths,measure = not args.plot_only)
+        photometry = uvot_measurer(filepaths,measure = not args.print_only)
         photometry.write(args.o)
 
 if __name__ == '__main__':
