@@ -29,7 +29,7 @@ $> python run_uvot_analysis.py --help
 ```bash
 $> python run_uvot_analysis.py -p /path/to/Swift/data --detect
 ```
-The directory */path/to/Swift/data/* should contain UVOT data strucutres from all observations (typically directories titles e.g., 00034934001)
+The directory */path/to/Swift/data/* should contain UVOT data strucutres from all observations (typically directories titled e.g., 00034934001)
 
 To run with a single observation:
 
