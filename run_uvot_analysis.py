@@ -37,20 +37,23 @@ def uvot_checker(filepaths):
 def uvot_measurer(filepaths,measure=True):
     #can try replacing this whole thing with a function on a single file and map iterator
 
+    from astropy.table import Table
     from uvot_photometry import MeasureSource
 
-    photometry = {}
+    ptab = Table(names=('filter','MJD','Mag','MagErr'),dtype=('S2','f8','f8','f8'))
 
     for filepath in filepaths:
         measurer = MeasureSource(filepath)
         filtr = measurer.band
         if measure:
             tmp = measurer.run_uvotsource()
-        
+         
         objphot = measurer.get_observation_data()
-        
-    return photometry
+        ptab.add_row(objphot)
 
+
+    return ptab
+        
 
 def main():
 
@@ -58,6 +61,7 @@ def main():
     parser.add_argument('-p',required=True, help='Parent directory of UVOT data structures (directories with names like 00030901252).')
     parser.add_argument('-obs',default=None,help='If specified, will only look at data for a single observations: e.g. 00030901252')
     parser.add_argument('-f', help='File with list of directory names of UVOT data structures. Use this option if directory names do not start with 000 for some reason...')
+    parser.add_argument('-o',default='photometry.fits',help='Name of output fits file for storing resulting photometry.')
     parser.add_argument('--check',action='store_true',default=False,help='View all images with the source marked to check observation quality.')
     parser.add_argument('--detect',action='store_true',default=False,help='Run uvotdetect on all images.')
     parser.add_argument('--measure',action='store_true',default=False,help='Run uvotsource on all images to get photometry.')
@@ -82,6 +86,7 @@ def main():
 
     if args.measure:
         photometry = uvot_measurer(filepaths,measure = not args.plot_only)
+        photometry.write(args.o)
 
 if __name__ == '__main__':
     main()
