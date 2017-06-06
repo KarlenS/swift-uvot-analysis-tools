@@ -11,15 +11,14 @@ from astropy.coordinates import SkyCoord
 class PositionExtractor(object):
 
     def __init__(self):
-        #hardcoded
-        self.source_ra = '8:54:48.867'
-        self.source_dec = '+20:06:30.97'
-	    self.bkg_ra =  '8:54:48.772'
-	    self.bkg_dec = '+20:05:32.576'
+        self.source_ra = None 
+        self.source_dec = None 
+        self.bkg_ra =  '8:54:48.772'
+        self.bkg_dec = '+20:05:32.576'
         self.filepath = ''
         self.detect = ''
-	    self.regfile = ''
-	    self.bkgregfile = ''
+        self.regfile = ''
+        self.bkgregfile = ''
 
     def cleanup(self):
         try:
@@ -36,39 +35,43 @@ class PositionExtractor(object):
         regfile.close()
 
         if not path.isfile(self.bkgregfile):
-                bkgregion = 'fk5;circle(%s,%s,20")' %(self.bkg_ra,self.bkg_dec)
-                bkgregfile = open(self.bkgregfile,'w')
-                bkgregfile.write(bkgregion)
-                bkgregfile.close()
+            bkgregion = 'fk5;circle(%s,%s,20")' %(self.bkg_ra,self.bkg_dec)
+            bkgregfile = open(self.bkgregfile,'w')
+            bkgregfile.write(bkgregion)
+            bkgregfile.close()
         else:
             print 'Background region file already exists. Not recreating.'
 
   
     def run_uvotimsum(self,inputFile, outputFile):
-    	tmp = subprocess.Popen(["uvotimsum",inputFile,outputFile,'chatter=0','clobber=no','exclude=NONE'], stdout=subprocess.PIPE)
-  	    tmp = tmp.communicate()
+        tmp = subprocess.Popen(["uvotimsum",inputFile,outputFile,'chatter=0','clobber=no','exclude=NONE'], stdout=subprocess.PIPE)
+        tmp = tmp.communicate()
 
     def getNearestSource(self):
         c = SkyCoord('%s %s' %(self.source_ra,self.source_dec),unit=(u.hourangle, u.deg))
+
         try:
             data = fits.getdata(self.detect)
         except:
             print 'File %s does not exist. %s is likely a multiple extension file. Attempting to combine extensions and rerunning.' %(self.detect,self.filepath)
-	    try:
-		#to keep things relatively clean, changing filepath to combined while remembering orignal name
-	        comb = '%s.comb' %self.filepath
-		    orig = self.filepath 
-	        self.run_uvotimsum(self.filepath,comb)
-		    self.filepath = comb
-	        detect_out = self.run_uvotdetect(exp=None)
-	        data = fits.getdata(self.detect)
-		    #once we have the data from combined, changing back filepath to original
-		    self.filepath = orig
-	        print 'Combining and rerunning seems to have worked!'
-	    except:
-            print 'Attempt to combine extensions failed. Defaulting to SIMBAD position.'
-            self.createRegionFiles(c)
-            return None
+            try:
+                #to keep things relatively clean, changing filepath to combined while remembering orignal name
+                comb = '%s.comb' %self.filepath
+                orig = self.filepath 
+                self.run_uvotimsum(self.filepath,comb)
+                self.filepath = comb
+                detect_out = self.run_uvotdetect(exp=None)
+                data = fits.getdata(self.detect)
+
+                #once we have the data from combined, changing back filepath to original
+
+                self.filepath = orig
+                print 'Combining and rerunning seems to have worked!'
+
+            except:
+                print 'Attempt to combine extensions failed. Defaulting to SIMBAD position.'
+                self.createRegionFiles(c)
+                return None
 
         if np.size(data) > 0:
             source_ind = np.argmin(np.abs(data['RA']-c.ra.value) + np.abs(data['DEC']-c.dec.value))
@@ -98,7 +101,7 @@ class PositionExtractor(object):
 
         outfile = path.join(dirpath,'detect_%s_%s.fits' %(obs,band))
         regfile = path.join(dirpath,'detect_%s_%s.reg' %(obs,band))
-	    bkgregfile = path.join(dirpath,'back_%s_%s.reg' %(obs,band))
+        bkgregfile = path.join(dirpath,'back_%s_%s.reg' %(obs,band))
 
         tmp = subprocess.Popen(['uvotdetect','infile=%s' %self.filepath,'outfile=%s' %outfile,'chatter=0','plotsrc=NO',
                                 'expfile=%s'%expfile,'threshold=3','clobber=YES'], stdout=subprocess.PIPE)

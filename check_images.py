@@ -15,15 +15,25 @@ class SourceImageViewer(object):
         opencmd = "file %s" %self.filepath
         d.set(opencmd)
 
-    def load_source_region(self,d,radius = 5):
+    def display_source_region(self,d,radius = 5):
+
+        reg = 'fk5; circle(%s,%s,%s")' %(self.source_ra,self.source_dec,radius)
+        d.set('regions', reg);
+
+    def display_bkg_region(self,d,radius = 20):
+
+        bkgreg = 'fk5; circle(%s,%s,%s")' %(self.bkg_ra,self.bkg_dec,radius)
+        d.set('regions', bkgreg)
+
+    def remove_regions(self,d):
+        d.set('regions delete all')
+
+    def load_regions(self,d):
         
         dirpath,filename = path.split(self.filepath)
         base,extn = filename.split('_')
         obs = base[2:-3]
         band = base[-2:]
-
-        #reg_default = 'fk5; circle(%s,%s,%s")' %(self.source_ra,self.source_dec,radius)
-        #d.set('regions', reg_default);
 
         regfile = path.join(dirpath,'detect_%s_%s.reg' %(obs,band))
         bkgregfile = path.join(dirpath,'back_%s_%s.reg' %(obs,band))
@@ -37,9 +47,7 @@ class SourceImageViewer(object):
         except IOError:
             print 'Background region file missing. Will try default coordinates.'
         
-        bkgreg = 'fk5; circle(%s,%s,%s")' %(self.bkg_ra,self.bkg_dec,20)
-        d.set('regions', bkgreg)
-
+        self.display_bkg_region(d)
 
         try:
             region = pyregion.open(regfile)
@@ -50,9 +58,7 @@ class SourceImageViewer(object):
         except IOError:
             print 'Region file missing. Only showing default coordinates, if any.'
 
-
-        reg = 'fk5; circle(%s,%s,%s")' %(self.source_ra,self.source_dec,radius)
-        d.set('regions', reg);
+        self.display_source_region(d)
 
     def center_on_source(self,d):
         centercmd = 'pan to %s %s wcs fk5' %(self.source_ra,self.source_dec)
@@ -67,9 +73,63 @@ class SourceImageViewer(object):
         d.set('scale log')
         d.set('cmap heat')
 
-    def setup_frame(self,d):
-        self.open_fits(d)
-        self.load_source_region(d)
+    def format_frame(self,d):
         self.zoom_in(d)
-        self.center_on_source(d)
         self.prettify(d)
+
+
+    def setup_frame(self,d):
+
+        self.open_fits(d)
+        self.format_frame(d)
+        self.load_regions(d)
+        self.center_on_source(d)
+
+    def get_user_coords(self,d):
+        return d.get('iexam coordinate wcs fk5')
+
+    def prime_bkg(self,d):
+
+        self.open_fits(d)
+        self.format_frame(d)
+        self.center_on_source(d)
+
+        while True:
+
+            self.display_source_region(d)
+            print 'Use the DS9 window to select a background region.'
+            coords = self.get_user_coords(d)
+            self.bkg_ra, self.bkg_dec = coords.split()
+            self.display_bkg_region(d)
+
+            response = raw_input('Keep background selection (y/n)?\n') 
+            if response == 'y':
+                print 'Great! That is all we need. Bye.'
+                break
+            else:
+                print 'Fine, try again...'
+                self.remove_regions(d)
+
+        d.set('quit')
+
+    def prime_source(self,d):
+
+        self.open_fits(d)
+        self.format_frame(d)
+
+        while True:
+
+            print 'Use the DS9 window to select a source region.'
+            coords = self.get_user_coords(d)
+            self.source_ra, self.source_dec = coords.split()
+            self.display_source_region(d)
+
+            response = raw_input('Keep source selection (y/n)?\n') 
+            if response == 'y':
+                print 'Great! That is all we need. Bye.'
+                break
+            else:
+                print 'Fine, try again...'
+                self.remove_regions(d)
+
+        d.set('quit')
