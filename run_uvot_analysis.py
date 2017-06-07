@@ -52,6 +52,7 @@ def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
         extTable = IrsaDust.get_extinction_table(source_coords)
         EBminV = np.median(extTable['A_SandF']/x['A_over_E_B_V_SandF'])
     
+    #calculate extinction magnitude
     A_lambda = R_lambda[filtr]*EBminV
 
     if mag:
@@ -60,12 +61,45 @@ def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
         return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
 
 def class uvot_runner(object):
+    '''Wrapper class for the wrappers! Class to coordinate running the different stages of the UVOT analysis.
+
+    Attributes:
+        filepath (str): path of image file used for analysis
+        source_ra (float): right ascension coordinate of source
+        source_dec (float): declination coordinate of source
+        bkg_ra (float): right ascension coordinate of background region center
+        bkg_dec (float): declination coordinate of background region center
+        ebminv (float): E(B-V) value for the source.
+    '''
 
     def __init__(self):
         self.filepaths = None
         self.source_ra = None
         self.source_dec = None
+        self.bkg_ra = None
+        self.bkg_dec = None
         self.ebminv = None
+
+    def uvot_primer(self):
+        '''Makes user identify a location for the background region using a DS9 window.
+        '''
+
+        
+        import pyds9 as ds9
+        from check_images import SourceImageViewer
+
+        #launching a ds9 window
+        d = ds9.DS9()
+
+        iv = SourceImageViewer()
+        # picking first optical filter image for user background selection,
+        # or just the first image, if there aren't optical ones.
+        try:
+            iv.filepath = next(filepath for filepath in filepaths if 'ubb' in filepath or 'uvv' in filepath)
+        except:
+            iv.filepath = filepaths[0]
+
+        self.bkg_ra, self.bkg_dec = iv.prime_bkg(d)
 
     def uvot_detecter(self):
 
@@ -79,8 +113,8 @@ def class uvot_runner(object):
         for filepath in self.filepaths:
             print 'working on %s...' %filepath 
             pos.filepath = filepath
-            detect_out = pos.run_uvotdetect()
-            nearest = pos.getNearestSource()
+            pos.run_uvotdetect()
+            pos.getNearestSource()
             pos.cleanup()
 
 
@@ -144,7 +178,6 @@ def class uvot_runner(object):
         #flux_extcorr = correct_exctinction(ptab['FluxDensity'],ptab['filter'],ebminv)
         #fluxerr_extcorr = correct_exctinction(ptab['FluxDensityErr'],ptab['filter'],ebminv)
         
-    
         return ptab.group_by('filter')
         
 
