@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>source_position &mdash; swift-uvot-analysis-tools 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="swift-uvot-analysis-tools 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> swift-uvot-analysis-tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">swift-uvot-analysis-tools</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>source_position</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for source_position</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">path</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">astropy.io</span> <span class="k">import</span> <span class="n">fits</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">astropy.coordinates</span> <span class="k">import</span> <span class="n">SkyCoord</span>
+
+
+<div class="viewcode-block" id="PositionExtractor"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor">[docs]</a><span class="k">class</span> <span class="nc">PositionExtractor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="kc">None</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="kc">None</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span> <span class="o">=</span>  <span class="s1">&#39;8:54:48.772&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="s1">&#39;+20:05:32.576&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regfile</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+<div class="viewcode-block" id="PositionExtractor.cleanup"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor.cleanup">[docs]</a>    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s1">&#39;File </span><span class="si">%s</span><span class="s1"> does not exist. Cannot delete what does not exist.&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">detect</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="PositionExtractor.createRegionFiles"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor.createRegionFiles">[docs]</a>    <span class="k">def</span> <span class="nf">createRegionFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">c</span><span class="p">):</span>
+        <span class="n">dirpath</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;fk5;circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,5&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">value</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">regfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regfile</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">regfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+        <span class="n">regfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span><span class="p">):</span>
+            <span class="n">bkgregion</span> <span class="o">=</span> <span class="s1">&#39;fk5;circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,20&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span><span class="p">)</span>
+            <span class="n">bkgregfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">bkgregfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bkgregion</span><span class="p">)</span>
+            <span class="n">bkgregfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s1">&#39;Background region file already exists. Not recreating.&#39;</span></div>
+
+  
+<div class="viewcode-block" id="PositionExtractor.run_uvotimsum"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor.run_uvotimsum">[docs]</a>    <span class="k">def</span> <span class="nf">run_uvotimsum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">outputFile</span><span class="p">):</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;uvotimsum&quot;</span><span class="p">,</span><span class="n">inputFile</span><span class="p">,</span><span class="n">outputFile</span><span class="p">,</span><span class="s1">&#39;chatter=0&#39;</span><span class="p">,</span><span class="s1">&#39;clobber=no&#39;</span><span class="p">,</span><span class="s1">&#39;exclude=NONE&#39;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PositionExtractor.getNearestSource"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor.getNearestSource">[docs]</a>    <span class="k">def</span> <span class="nf">getNearestSource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span><span class="p">),</span><span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">hourangle</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s1">&#39;File </span><span class="si">%s</span><span class="s1"> does not exist. </span><span class="si">%s</span><span class="s1"> is likely a multiple extension file. Attempting to combine extensions and rerunning.&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1">#to keep things relatively clean, changing filepath to combined while remembering orignal name</span>
+                <span class="n">comb</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.comb&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span>
+                <span class="n">orig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">run_uvotimsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span><span class="n">comb</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">comb</span>
+                <span class="n">detect_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_uvotdetect</span><span class="p">(</span><span class="n">exp</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect</span><span class="p">)</span>
+
+                <span class="c1">#once we have the data from combined, changing back filepath to original</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">orig</span>
+                <span class="nb">print</span> <span class="s1">&#39;Combining and rerunning seems to have worked!&#39;</span>
+
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Attempt to combine extensions failed. Defaulting to SIMBAD position.&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">createRegionFiles</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">source_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">c</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;DEC&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">c</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">c_detect</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;RA&#39;</span><span class="p">],</span><span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;DEC&#39;</span><span class="p">],</span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;deg&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">c_detect</span><span class="o">.</span><span class="n">separation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mf">6.E-4</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">createRegionFiles</span><span class="p">(</span><span class="n">c_detect</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Nearest source too far away (more than 2 arcsecs)! Defaulting to SIMBAD coords.&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">createRegionFiles</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">c_detect</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">createRegionFiles</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s1">&#39;No sources were detected in </span><span class="si">%s</span><span class="s1">! Defaulting to SIMBAD coords.&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="PositionExtractor.run_uvotdetect"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor.run_uvotdetect">[docs]</a>    <span class="k">def</span> <span class="nf">run_uvotdetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">exp</span><span class="o">=</span><span class="s1">&#39;exp.fits&#39;</span><span class="p">):</span>
+        <span class="n">dirpath</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">base</span><span class="p">,</span><span class="n">extn</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">band</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+
+        <span class="n">expfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_ex.img.gz&#39;</span> <span class="o">%</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">expfile</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">exp</span><span class="p">:</span>
+            <span class="n">expfile</span><span class="o">=</span><span class="s1">&#39;NONE&#39;</span>
+
+        <span class="n">outfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;detect_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">.fits&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span><span class="n">band</span><span class="p">))</span>
+        <span class="n">regfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;detect_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">.reg&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span><span class="n">band</span><span class="p">))</span>
+        <span class="n">bkgregfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;back_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">.reg&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span><span class="n">band</span><span class="p">))</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s1">&#39;uvotdetect&#39;</span><span class="p">,</span><span class="s1">&#39;infile=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span><span class="s1">&#39;outfile=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">outfile</span><span class="p">,</span><span class="s1">&#39;chatter=0&#39;</span><span class="p">,</span><span class="s1">&#39;plotsrc=NO&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;expfile=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">expfile</span><span class="p">,</span><span class="s1">&#39;threshold=3&#39;</span><span class="p">,</span><span class="s1">&#39;clobber=YES&#39;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect</span> <span class="o">=</span> <span class="n">outfile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regfile</span> <span class="o">=</span> <span class="n">regfile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span> <span class="o">=</span> <span class="n">bkgregfile</span>
+
+        <span class="k">return</span> <span class="n">tmp</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Karlen Shahinyan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
