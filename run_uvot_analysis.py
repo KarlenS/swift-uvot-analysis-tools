@@ -71,7 +71,6 @@ def class uvot_runner(object):
         bkg_dec (float): declination coordinate of background region center
         ebminv (float): E(B-V) value for the source.
     '''
-
     def __init__(self):
         self.filepaths = None
         self.source_ra = None
@@ -80,10 +79,10 @@ def class uvot_runner(object):
         self.bkg_dec = None
         self.ebminv = None
 
+
     def uvot_primer(self):
         '''Makes user identify a location for the background region using a DS9 window.
         '''
-
         
         import pyds9 as ds9
         from check_images import SourceImageViewer
@@ -100,6 +99,7 @@ def class uvot_runner(object):
             iv.filepath = filepaths[0]
 
         self.bkg_ra, self.bkg_dec = iv.prime_bkg(d)
+
 
     def uvot_detecter(self):
 
@@ -174,9 +174,6 @@ def class uvot_runner(object):
             objphot.append(fluxerr)
     
             ptab.add_row(objphot)
-    
-        #flux_extcorr = correct_exctinction(ptab['FluxDensity'],ptab['filter'],ebminv)
-        #fluxerr_extcorr = correct_exctinction(ptab['FluxDensityErr'],ptab['filter'],ebminv)
         
         return ptab.group_by('filter')
         

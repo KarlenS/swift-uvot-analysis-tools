@@ -1,12 +1,11 @@
 '''
 Module for determining the source position using ``UVOTDETECT`` and for generating source and background region files used in the photometry.
 '''
-
 import os
 import os.path as path
-import numpy as np
 import glob
 import subprocess
+import numpy as np
 
 from astropy.io import fits
 from astropy import units as u
@@ -22,7 +21,7 @@ class PositionExtractor(object):
         bkg_ra (float): right ascension coordinate of background region center
         bkg_dec (float): declination coordinate of background region center
         filepath (str): path of image file used for analysis
-        detect (str): path of UVOTDETECT output file
+        detect (str): path of ``UVOTDETECT`` output file
         regfile (str): path of source region file
         bkgregfile (str): path of background region file
     '''
