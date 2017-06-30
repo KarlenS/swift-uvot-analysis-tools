@@ -21,9 +21,9 @@ def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
     '''Function to correct for Galactic extinction using values from IRSA
 
     
-    .. note:: Central wavelengths for UVOT filters are taken from `Poole et al. (2008)`_. 
-              
-              :math:`R_{\lambda}` values are derived using the `York Extinction Solver`_.
+    Note:
+        Central wavelengths for UVOT filters are taken from `Poole et al. (2008)`_.               
+        :math:`R_{\lambda}` values are derived using the `York Extinction Solver`_.
 
     
     Args:
@@ -60,7 +60,7 @@ def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
     else:
         return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
 
-def class uvot_runner(object):
+class uvot_runner(object):
     '''Wrapper class for the wrappers! Class to coordinate running the different stages of the UVOT analysis.
 
     Attributes:
@@ -80,15 +80,17 @@ def class uvot_runner(object):
         self.ebminv = None
 
 
-    def uvot_primer(self):
-        '''Makes user identify a location for the background region using a DS9 window.
+    def uvot_primer(self, prime_source = False):
+        '''Makes user identify a location for the background region (and source location) using a DS9 window.
+
+        Args:
+            prime_source (bool): If true, in addition to prompting user to interactively select a center for background region, will also ask user to select location for a source.
         '''
         
         import pyds9 as ds9
         from check_images import SourceImageViewer
 
         #launching a ds9 window
-        d = ds9.DS9()
 
         iv = SourceImageViewer()
         # picking first optical filter image for user background selection,
@@ -98,10 +100,16 @@ def class uvot_runner(object):
         except:
             iv.filepath = filepaths[0]
 
-        self.bkg_ra, self.bkg_dec = iv.prime_bkg(d)
+        self.bkg_ra, self.bkg_dec = iv.prime_bkg()
+
+        if prime_source:
+            self.source_ra, self.source_dec = iv.prime_source()
+
 
 
     def uvot_detecter(self):
+        '''Wrapper for running ``UVOTDETECT`` on all requested observations and extracting position information.
+        '''
 
         from source_position import PositionExtractor
 
@@ -119,6 +127,8 @@ def class uvot_runner(object):
 
 
     def uvot_checker(self):
+        '''Wrapper for viewing images from all requested observations to verify the source and background regions and image quality.
+        '''
 
         import pyds9 as ds9
         from check_images import SourceImageViewer
@@ -133,22 +143,34 @@ def class uvot_runner(object):
             iv.filepath = filepath
             iv.source_ra = self.source_ra 
             iv.source_dec = self.source_dec
-            iv.bkg_ra = '8:54:48.772'
-            iv.bkg_dec = '+20:05:32.576'
+            iv.bkg_ra = self.bcg_ra 
+            iv.bkg_dec = self.bkg_dec
             iv.setup_frame(d)
             x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
 
 
     def uvot_measurer(self,measure=True):
-    
+        '''Wrapper for running ``UVOTDETECT`` and extracting photometry information from all requested observations.
+
+        Args:
+            measure (bool): If True, will run ``UVOTDETECT`` otherwise will simply parse existing output files.
+
+        Returns:
+            `astropy.table.Table`_: Astropy Table with photomoetry information grouped by observation filter
+
+        .. _astropy.table.Table: 
+            http://docs.astropy.org/en/stable/api/astropy.table.Table.html
+        '''
+        
         from astropy.table import Table
         from astropy import units as u
         from uvot_photometry import MeasureSource
     
-    
+        #creating Astropy table for storing the photometry information
         ptab = Table(names=('filter','MJD','Mag','MagErr','FluxDensity','FluxDensityErr','FluxDensityJy','FluxDensityJyErr','FluxExtCorr','FluxExtcorrErr'),
                                 dtype=('S2','f8','f8','f8','f8','f8','f8','f8','f8','f8'))
     
+        #defining units for each column
         ptab['MJD'].unit = u.d
         ptab['Mag'].unit = u.mag
         ptab['MagErr'].unit = u.mag
@@ -159,6 +181,7 @@ def class uvot_runner(object):
         ptab['Flux'].unit = u.erg/u.cm/u.cm/u.second 
         ptab['FluxErr'].unit = u.erg/u.cm/u.cm/u.second
     
+        #run through all image files to perform and/or extract photometry
         for filepath in self.filepaths:
             measurer = MeasureSource(filepath)
             filtr = measurer.band
@@ -183,18 +206,23 @@ def main():
     parser = argparse.ArgumentParser(description='Quick verification of image quality and regions selection for UVOT analysis.')
     parser.add_argument('-p',required=True, help='Parent directory of UVOT data structures (directories with names like 00030901252).')
     parser.add_argument('-obs',default=None,help='If specified, will only look at data for a single observations: e.g. 00030901252')
-    parser.add_argument('-f', help='File with list of directory names of UVOT data structures. Use this option if directory names do not start with 000 for some reason...')
+    parser.add_argument('-f',default=None, help='File with list of (full or relative) directory paths of UVOT data structures. Use this option if UVOT data structure directory names do not start with 000 for some reason...')
     parser.add_argument('-o',default='photometry.fits',help='Name of output fits file for storing resulting photometry.')
     parser.add_argument('-c',default=None,help='Specify coordinates for the source of interest.')
-    parser.add_argument('-s',default=None,help='Specify the name for the source of interest. Ignored if -c is also specified.')
+    parser.add_argument('-s',default=None,help='Specify the name for the source of interest. Ignored if -c is specified.')
     parser.add_argument('-ebv',default=None,help='User-specified E(B-V) value. Will query IRSA database, if not specified.')
     parser.add_argument('--check',action='store_true',default=False,help='View all images with the source marked to check observation quality.')
-    parser.add_argument('--detect',action='store_true',default=False,help='Run uvotdetect on all images.')
-    parser.add_argument('--measure',action='store_true',default=False,help='Run uvotsource on all images to get photometry.')
-    parser.add_argument('--print_only',action='store_true',default=False,help='Only plot light curves.')
+    parser.add_argument('--detect',action='store_true',default=False,help='Run UVOTDETECT on all images.')
+    parser.add_argument('--measure',action='store_true',default=False,help='Run UVOTSOURCE on all images to get photometry.')
+    parser.add_argument('--extract_only',action='store_true',default=False,help='Extract photometry information from existing UVOTSOURCE output files, without rerunning UVOTSOURCE.')
     args = parser.parse_args()
 
-    if not args.obs:
+    #use all observations in the provided directory unless a specific obs is requested
+    if args.f:
+        filedirs = np.genfromtxt(args.f,dtype=str)
+        tmppaths = [glob.iglob('%s/uvot/image/*sk.img.gz'%d) for d in filedirs ]
+        filepaths = [path for paths in tmppaths for path in paths]
+    elif not args.obs:
         filepaths = glob.iglob('%s/000*/uvot/image/*sk.img.gz' %args.p)#setting up filepaths
     else:
         obspath = os.path.join(args.p,str(args.obs))
@@ -203,16 +231,35 @@ def main():
         else:
             raise NameError('%s does not exist.' %obspath)
 
-    if args.c:
-        coords = args.c
-    elif args.s:
-        coords = ned.query_object(args.s) 
-    else:
-        raise parser.error('Please specify a source name with -s option or coordinates with -c option.')
+    #raise an error if an operation is not selected.
+    if not ( args.measure or args.check or  args.detect or  args.extract_only ):
+        raise parser.error('Nothing to do. Use --detect, --check, --measure, or --extract_only flags for desired operations or -h for help.')
 
+
+
+    #run all the wrappers, though unless --detect --check or --measure are given, nothing will happen!
     runner = uvot_runner()
     runner.filepaths = filepaths
-    runner.source_coords = coords
+
+
+    #use coordinates either provided by the user, coordinates looked up based on the source name provided by the user, or coordinates selected interactively by the user.
+    prime_source = False
+    if args.c:
+        #need to get the parsing right
+        runner.source_ra, runner.source_dec = args.c
+    elif args.s:
+        #need to get the parsing right
+        coords = ned.query_object(args.s)
+        runner.source_ra, runner.source_dec = coords
+    else:
+        prime_source = True
+        print 'Source not specified by either -c or -s option. Will make user select the source location interactively.'
+        print 'Quit (ctrl-C) and specifiy source name with -s or source coordinates with -c options if the source is known.'
+
+
+    #get user to identify background region (and source region if coordinates or source name are not supplied)
+    runner.uvot_primer(prime_source=prime_source)
+
 
     if args.detect:
         runner.uvot_detecter()
@@ -220,11 +267,12 @@ def main():
     if args.check:
         runner.uvot_checker()
 
-
-    if args.measure:
-        photometry = runner.uvot_measurer(measure = not args.print_only)
-        photometry.write('OJ287_uvot_photometry_wExtCorr.dat',format='ascii.commented_header')
+    #can set up options for multiple formats here, but will probably default to fits
+    if args.measure or args.extract_only:
+        photometry = runner.uvot_measurer(measure = not args.extract_only)
+        #photometry.write('OJ287_uvot_photometry_wExtCorr.dat',format='ascii.commented_header')
         photometry.write(args.o)
+
 
 if __name__ == '__main__':
     main()

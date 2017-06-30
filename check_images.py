@@ -153,6 +153,9 @@ class SourceImageViewer(ds9.DS9):
         DS9 will then go into interactive mode and prompt the user to select a position for the background region center on the image.
         Once the user clicks on the image, a background region will be drawn at the clicked position and the user's happiness level 
         will be assessed.
+
+        Returns:
+            list: background region center RA and Dec coordinates
         '''
 
         self.open_fits()
@@ -176,12 +179,16 @@ class SourceImageViewer(ds9.DS9):
                 self.remove_regions()
 
         self.set('quit')
+        return [self.bkg_ra,self.bkg_dec]
 
     def prime_source(self):
         '''Primes the user to select a position for a source. 
         An image file will be displayed and formatted. DS9 will then go into interactive mode and prompt the 
         user to click on the location for the source of interest. Once the user clicks on the image, a source region
         will be drawn at the clicked position and the user's happiness level will be assessed.
+
+        Returns:
+            list: source region center RA and Dec coordinates
         '''
 
         self.open_fits()
@@ -204,3 +211,4 @@ class SourceImageViewer(ds9.DS9):
                 self.remove_regions()
 
         self.set('quit')
+        return [self.bkg_ra,self.bkg_dec]
