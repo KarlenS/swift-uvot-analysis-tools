@@ -1,0 +1,406 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>check_images &mdash; swift-uvot-python-tools 0.7 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="swift-uvot-python-tools 0.7 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> swift-uvot-python-tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">swift-uvot-python-tools</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>check_images</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for check_images</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Module for visually inspecting and interacting with UVOT images using DS9, including selection of DS9 regions for aperture photometry.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">path</span>
+<span class="kn">import</span> <span class="nn">pyds9</span> <span class="k">as</span> <span class="nn">ds9</span>
+<span class="kn">import</span> <span class="nn">pyregion</span>
+
+<div class="viewcode-block" id="SourceImageViewer"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer">[docs]</a><span class="k">class</span> <span class="nc">SourceImageViewer</span><span class="p">(</span><span class="n">ds9</span><span class="o">.</span><span class="n">DS9</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Inherits from a `pyds9`_ object. </span>
+<span class="sd">    Initialize the class with ``filepath`` input. The radii of source and background are set to suggested UVOT values.</span>
+<span class="sd">    These are hardcoded at the moment. If they require to be changed, `aperture correction in UVOTSOURCE`_ will be necessary,</span>
+<span class="sd">    which is not currently included in these wrappers.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        filepath (str): path to image to display in DS9</span>
+<span class="sd">        source_ra (str): RA coordinate of source of interest</span>
+<span class="sd">        source_dec (str): Dec coordinate of source of interest</span>
+<span class="sd">        bkg_ra (str): RA coordinate of background region center</span>
+<span class="sd">        bkg_dec (str): Dec coordinate of background region center</span>
+
+<span class="sd">    .. _pyds9:</span>
+<span class="sd">        https://github.com/ericmandel/pyds9</span>
+<span class="sd">    .. _aperture correction in UVOTSOURCE:</span>
+<span class="sd">        https://heasarc.nasa.gov/lheasoft/ftools/headas/uvotsource.html</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="c1">#this will launch a DS9 window if there isn&#39;t one already or connect to an existing one</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SourceImageViewer</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="kc">None</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SourceImageViewer.open_fits"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.open_fits">[docs]</a>    <span class="k">def</span> <span class="nf">open_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to open ``filepath``</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+        <span class="n">opencmd</span> <span class="o">=</span> <span class="s2">&quot;file </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">opencmd</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.display_source_region"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.display_source_region">[docs]</a>    <span class="k">def</span> <span class="nf">display_source_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">radius</span> <span class="o">=</span> <span class="mf">5.</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to display a region corresponding to source coordinates.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            radius (float): radius of the source region</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+        <span class="n">reg</span> <span class="o">=</span> <span class="s1">&#39;fk5; circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span><span class="p">,</span><span class="n">radius</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span> <span class="n">reg</span><span class="p">);</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.display_bkg_region"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.display_bkg_region">[docs]</a>    <span class="k">def</span> <span class="nf">display_bkg_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">radius</span> <span class="o">=</span> <span class="mf">20.</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to display a region corresponding to background center coordinates.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">            radius (float): radius of the background region</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+
+        <span class="n">bkgreg</span> <span class="o">=</span> <span class="s1">&#39;fk5; circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span><span class="p">,</span><span class="n">radius</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span> <span class="n">bkgreg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.remove_regions"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.remove_regions">[docs]</a>    <span class="k">def</span> <span class="nf">remove_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to delete all regions currently open in a frame.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;regions delete all&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.load_regions"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.load_regions">[docs]</a>    <span class="k">def</span> <span class="nf">load_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to load regions based on the provided ``filepath``. The `filepath`` gets parsed to </span>
+<span class="sd">        construct the name of the region files based on the observation ID and band. If the region files</span>
+<span class="sd">        are not found in the parent path of ``filepath``, the default coordinates will get used for </span>
+<span class="sd">        the source (likely from SIMBAD) and for the background.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">#parse filepath to get obs ID and band</span>
+        <span class="n">dirpath</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">base</span><span class="p">,</span><span class="n">extn</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">band</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+
+        <span class="c1">#constructs the source and background region file paths</span>
+        <span class="n">regfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;detect_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">.reg&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span><span class="n">band</span><span class="p">))</span>
+        <span class="n">bkgregfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;back_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">.reg&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span><span class="n">band</span><span class="p">))</span>
+
+        <span class="c1">#trying to load the background region. If the attempt fails, whatever coordinates are</span>
+        <span class="c1">#currently stored in the object bkg_ra and bkg_dec attributes will be displayed.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">bkgregion</span> <span class="o">=</span> <span class="n">pyregion</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">bkgregfile</span><span class="p">)</span>
+            <span class="n">bkg_ra</span> <span class="o">=</span> <span class="n">bkgregion</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coord_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">bkg_dec</span> <span class="o">=</span> <span class="n">bkgregion</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coord_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span> <span class="o">=</span> <span class="n">bkg_ra</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="n">bkg_dec</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s1">&#39;Background region file missing. Will try default coordinates.&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_bkg_region</span><span class="p">()</span>
+
+        <span class="c1">#trying to load the source region. If the attempt fails, whatever coordinates are</span>
+        <span class="c1">#currently stored in the object source_ra and source_dec attributes will be displayed.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">region</span> <span class="o">=</span> <span class="n">pyregion</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">regfile</span><span class="p">)</span>
+            <span class="n">ra</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coord_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dec</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coord_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="n">ra</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="n">dec</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s1">&#39;Region file missing. Only showing default coordinates, if any.&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_source_region</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.center_on_source"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.center_on_source">[docs]</a>    <span class="k">def</span> <span class="nf">center_on_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to center the frame on the source location.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">centercmd</span> <span class="o">=</span> <span class="s1">&#39;pan to </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> wcs fk5&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">centercmd</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.zoom_in"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.zoom_in">[docs]</a>    <span class="k">def</span> <span class="nf">zoom_in</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">zoom</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to zoom in.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;zoom to fit&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;zoom </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">zoom</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.prettify"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.prettify">[docs]</a>    <span class="k">def</span> <span class="nf">prettify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to scale the image to log and minmax and use the heat color map.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;scale mode minmax&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;scale log&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;cmap heat&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.format_frame"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.format_frame">[docs]</a>    <span class="k">def</span> <span class="nf">format_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Calls ``zoom_in`` and ``prettify`` methods.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoom_in</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prettify</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SourceImageViewer.setup_frame"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.setup_frame">[docs]</a>    <span class="k">def</span> <span class="nf">setup_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Prepares a frame by opening a file, calling ``format_frame`` method, loading regions, and centering on the source position.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_fits</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format_frame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_regions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">center_on_source</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.get_user_coords"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.get_user_coords">[docs]</a>    <span class="k">def</span> <span class="nf">get_user_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Tell DS9 to go into an interactive mode and get the coordinates of the position the user clicks.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;iexam coordinate wcs fk5&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.prime_bkg"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.prime_bkg">[docs]</a>    <span class="k">def</span> <span class="nf">prime_bkg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Primes the user to select a position for the center of the background region.</span>
+<span class="sd">        An image file will be displayed and formatted. The frame will be centered on the source position and display a source region.</span>
+<span class="sd">        DS9 will then go into interactive mode and prompt the user to select a position for the background region center on the image.</span>
+<span class="sd">        Once the user clicks on the image, a background region will be drawn at the clicked position and the user&#39;s happiness level </span>
+<span class="sd">        will be assessed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: background region center RA and Dec coordinates</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_fits</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format_frame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">center_on_source</span><span class="p">()</span>
+
+        <span class="c1">#open loop to keep prompting the user for background selection if they&#39;re not happy after an initial attempt</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display_source_region</span><span class="p">()</span>
+            <span class="nb">print</span> <span class="s1">&#39;Use the DS9 window to select a location for the background region.&#39;</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_coords</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display_bkg_region</span><span class="p">()</span>
+
+            <span class="n">response</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s1">&#39;Happy with the background selection (y / anything_else)?</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> 
+            <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Great! That is all we need. Bye.&#39;</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Fine, try again...&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_regions</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;quit&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SourceImageViewer.prime_source"><a class="viewcode-back" href="../check_images.html#check_images.SourceImageViewer.prime_source">[docs]</a>    <span class="k">def</span> <span class="nf">prime_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Primes the user to select a position for a source. </span>
+<span class="sd">        An image file will be displayed and formatted. DS9 will then go into interactive mode and prompt the </span>
+<span class="sd">        user to click on the location for the source of interest. Once the user clicks on the image, a source region</span>
+<span class="sd">        will be drawn at the clicked position and the user&#39;s happiness level will be assessed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: source region center RA and Dec coordinates</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_fits</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format_frame</span><span class="p">()</span>
+
+        <span class="c1">#open loop to keep prompting the user for source selection if they&#39;re not happy after an initial attempt</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="nb">print</span> <span class="s1">&#39;Use the DS9 window to select a source region.&#39;</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_coords</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display_source_region</span><span class="p">()</span>
+
+            <span class="n">response</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s1">&#39;Happy with source location selection (y/n)?</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> 
+            <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Great! That is all we need. Bye.&#39;</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Fine, try again...&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_regions</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;quit&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Karlen Shahinyan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.7',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

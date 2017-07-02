@@ -46,7 +46,7 @@ class PositionExtractor(object):
             pass
 
     def createRegionFiles(self):
-        '''Creates source and background region files, using ``source_ra``,``source_dec``,``bkg_ra``, and ``bkg_dec``  attributes. Filenames are generated using the ``filepath`` attribute.
+        '''Creates source and background region files, using ``source_ra``, ``source_dec``, ``bkg_ra``, and ``bkg_dec``  attributes. Filenames are generated using the ``filepath`` attribute.
         '''
         
         dirpath,filename = path.split(self.filepath)

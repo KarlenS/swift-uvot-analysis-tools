@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>run_uvot_analysis module &mdash; swift-uvot-python-tools 0.7 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="swift-uvot-python-tools 0.7 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> swift-uvot-python-tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">run_uvot_analysis module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">swift-uvot-python-tools</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>run_uvot_analysis module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/run_uvot_analysis.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-run_uvot_analysis">
+<span id="run-uvot-analysis-module"></span><h1>run_uvot_analysis module<a class="headerlink" href="#module-run_uvot_analysis" title="Permalink to this headline">¶</a></h1>
+<p>This is the main module for an automated Swift-UVOT analysis.</p>
+<dl class="docutils">
+<dt>The process consists of three primary steps:</dt>
+<dd><ul class="first last simple">
+<li>Run <code class="docutils literal"><span class="pre">UVOTDETECT</span></code> to get a proper centroid for the source for each observation, and generate region files for source and background regions,</li>
+<li>Visually check images for potential issues/artifacts (and manually reject observations),</li>
+<li>Run <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> to obtain photometry and parse data for light curve and SED use.</li>
+</ul>
+</dd>
+</dl>
+<dl class="function">
+<dt id="run_uvot_analysis.correct_extinction">
+<code class="descclassname">run_uvot_analysis.</code><code class="descname">correct_extinction</code><span class="sig-paren">(</span><em>val</em>, <em>filtr</em>, <em>source_coords</em>, <em>EBminV=None</em>, <em>mag=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_uvot_analysis.html#correct_extinction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.correct_extinction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to correct for Galactic extinction using values from IRSA</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Central wavelengths for UVOT filters are taken from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008MNRAS.383..627P">Poole et al. (2008)</a>.
+<span class="math">\(R_{\lambda}\)</span> values are derived using the <a class="reference external" href="http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi">York Extinction Solver</a>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>val</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; flux or mag requiring extinction correction (flux is assumed, unless <code class="docutils literal"><span class="pre">mag</span> <span class="pre">=</span> <span class="pre">True</span></code>)</li>
+<li><strong>filtr</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; UVOT filter name (vv, uu, bb, w1, m2, w2)</li>
+<li><strong>source_coords</strong> (<a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a>) &#8211; Source position to be used for querying the amount of extinction</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Extinction-corrected flux (erg/s/cm2) or magnitude (mag)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="run_uvot_analysis.main">
+<code class="descclassname">run_uvot_analysis.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_uvot_analysis.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="run_uvot_analysis.uvot_runner">
+<em class="property">class </em><code class="descclassname">run_uvot_analysis.</code><code class="descname">uvot_runner</code><a class="reference internal" href="_modules/run_uvot_analysis.html#uvot_runner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.uvot_runner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Wrapper class for the wrappers! Class to coordinate running the different stages of the UVOT analysis.</p>
+<dl class="attribute">
+<dt id="run_uvot_analysis.uvot_runner.filepath">
+<code class="descname">filepath</code><a class="headerlink" href="#run_uvot_analysis.uvot_runner.filepath" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; path of image file used for analysis</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="run_uvot_analysis.uvot_runner.source_ra">
+<code class="descname">source_ra</code><a class="headerlink" href="#run_uvot_analysis.uvot_runner.source_ra" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; right ascension coordinate of source</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="run_uvot_analysis.uvot_runner.source_dec">
+<code class="descname">source_dec</code><a class="headerlink" href="#run_uvot_analysis.uvot_runner.source_dec" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; declination coordinate of source</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="run_uvot_analysis.uvot_runner.bkg_ra">
+<code class="descname">bkg_ra</code><a class="headerlink" href="#run_uvot_analysis.uvot_runner.bkg_ra" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; right ascension coordinate of background region center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="run_uvot_analysis.uvot_runner.bkg_dec">
+<code class="descname">bkg_dec</code><a class="headerlink" href="#run_uvot_analysis.uvot_runner.bkg_dec" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; declination coordinate of background region center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="run_uvot_analysis.uvot_runner.ebminv">
+<code class="descname">ebminv</code><a class="headerlink" href="#run_uvot_analysis.uvot_runner.ebminv" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; E(B-V) value for the source.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="run_uvot_analysis.uvot_runner.query_for_source_coords">
+<code class="descname">query_for_source_coords</code><span class="sig-paren">(</span><em>source_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_uvot_analysis.html#uvot_runner.query_for_source_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.uvot_runner.query_for_source_coords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="run_uvot_analysis.uvot_runner.uvot_checker">
+<code class="descname">uvot_checker</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_uvot_analysis.html#uvot_runner.uvot_checker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.uvot_runner.uvot_checker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for viewing images from all requested observations to verify the source and background regions and image quality.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="run_uvot_analysis.uvot_runner.uvot_detecter">
+<code class="descname">uvot_detecter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_uvot_analysis.html#uvot_runner.uvot_detecter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.uvot_runner.uvot_detecter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for running <code class="docutils literal"><span class="pre">UVOTDETECT</span></code> on all requested observations and extracting position information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="run_uvot_analysis.uvot_runner.uvot_measurer">
+<code class="descname">uvot_measurer</code><span class="sig-paren">(</span><em>measure=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_uvot_analysis.html#uvot_runner.uvot_measurer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.uvot_runner.uvot_measurer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for running <code class="docutils literal"><span class="pre">UVOTDETECT</span></code> and extracting photometry information from all requested observations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>measure</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If True, will run <code class="docutils literal"><span class="pre">UVOTDETECT</span></code> otherwise will simply parse existing output files.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Astropy Table with photomoetry information grouped by observation filter</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.table.Table.html">astropy.table.Table</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="run_uvot_analysis.uvot_runner.uvot_primer">
+<code class="descname">uvot_primer</code><span class="sig-paren">(</span><em>prime_source=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_uvot_analysis.html#uvot_runner.uvot_primer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_uvot_analysis.uvot_runner.uvot_primer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes user identify a location for the background region (and source location) using a DS9 window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prime_source</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If true, in addition to prompting user to interactively select a center for background region, will also ask user to select location for a source.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Karlen Shahinyan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.7',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

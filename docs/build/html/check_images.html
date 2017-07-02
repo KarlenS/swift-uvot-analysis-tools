@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>check_images module &mdash; swift-uvot-python-tools 0.7 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="swift-uvot-python-tools 0.7 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> swift-uvot-python-tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">check_images module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">swift-uvot-python-tools</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>check_images module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/check_images.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-check_images">
+<span id="check-images-module"></span><h1>check_images module<a class="headerlink" href="#module-check_images" title="Permalink to this headline">¶</a></h1>
+<p>Module for visually inspecting and interacting with UVOT images using DS9, including selection of DS9 regions for aperture photometry.</p>
+<dl class="class">
+<dt id="check_images.SourceImageViewer">
+<em class="property">class </em><code class="descclassname">check_images.</code><code class="descname">SourceImageViewer</code><span class="sig-paren">(</span><em>filepath=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyds9.DS9</span></code></p>
+<p>Inherits from a <a class="reference external" href="https://github.com/ericmandel/pyds9">pyds9</a> object.
+Initialize the class with <code class="docutils literal"><span class="pre">filepath</span></code> input. The radii of source and background are set to suggested UVOT values.
+These are hardcoded at the moment. If they require to be changed, <a class="reference external" href="https://heasarc.nasa.gov/lheasoft/ftools/headas/uvotsource.html">aperture correction in UVOTSOURCE</a> will be necessary,
+which is not currently included in these wrappers.</p>
+<dl class="attribute">
+<dt id="check_images.SourceImageViewer.filepath">
+<code class="descname">filepath</code><a class="headerlink" href="#check_images.SourceImageViewer.filepath" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; path to image to display in DS9</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="check_images.SourceImageViewer.source_ra">
+<code class="descname">source_ra</code><a class="headerlink" href="#check_images.SourceImageViewer.source_ra" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; RA coordinate of source of interest</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="check_images.SourceImageViewer.source_dec">
+<code class="descname">source_dec</code><a class="headerlink" href="#check_images.SourceImageViewer.source_dec" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Dec coordinate of source of interest</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="check_images.SourceImageViewer.bkg_ra">
+<code class="descname">bkg_ra</code><a class="headerlink" href="#check_images.SourceImageViewer.bkg_ra" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; RA coordinate of background region center</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="check_images.SourceImageViewer.bkg_dec">
+<code class="descname">bkg_dec</code><a class="headerlink" href="#check_images.SourceImageViewer.bkg_dec" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Dec coordinate of background region center</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.center_on_source">
+<code class="descname">center_on_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.center_on_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.center_on_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to center the frame on the source location.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.display_bkg_region">
+<code class="descname">display_bkg_region</code><span class="sig-paren">(</span><em>radius=20.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.display_bkg_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.display_bkg_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to display a region corresponding to background center coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; radius of the background region</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.display_source_region">
+<code class="descname">display_source_region</code><span class="sig-paren">(</span><em>radius=5.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.display_source_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.display_source_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to display a region corresponding to source coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; radius of the source region</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.format_frame">
+<code class="descname">format_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.format_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.format_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls <code class="docutils literal"><span class="pre">zoom_in</span></code> and <code class="docutils literal"><span class="pre">prettify</span></code> methods.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.get_user_coords">
+<code class="descname">get_user_coords</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.get_user_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.get_user_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to go into an interactive mode and get the coordinates of the position the user clicks.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.load_regions">
+<code class="descname">load_regions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.load_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.load_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to load regions based on the provided <code class="docutils literal"><span class="pre">filepath</span></code>. The <cite>filepath`</cite> gets parsed to
+construct the name of the region files based on the observation ID and band. If the region files
+are not found in the parent path of <code class="docutils literal"><span class="pre">filepath</span></code>, the default coordinates will get used for
+the source (likely from SIMBAD) and for the background.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.open_fits">
+<code class="descname">open_fits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.open_fits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.open_fits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to open <code class="docutils literal"><span class="pre">filepath</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.prettify">
+<code class="descname">prettify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.prettify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.prettify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to scale the image to log and minmax and use the heat color map.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.prime_bkg">
+<code class="descname">prime_bkg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.prime_bkg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.prime_bkg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Primes the user to select a position for the center of the background region.
+An image file will be displayed and formatted. The frame will be centered on the source position and display a source region.
+DS9 will then go into interactive mode and prompt the user to select a position for the background region center on the image.
+Once the user clicks on the image, a background region will be drawn at the clicked position and the user&#8217;s happiness level
+will be assessed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">background region center RA and Dec coordinates</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.prime_source">
+<code class="descname">prime_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.prime_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.prime_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Primes the user to select a position for a source.
+An image file will be displayed and formatted. DS9 will then go into interactive mode and prompt the
+user to click on the location for the source of interest. Once the user clicks on the image, a source region
+will be drawn at the clicked position and the user&#8217;s happiness level will be assessed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">source region center RA and Dec coordinates</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.remove_regions">
+<code class="descname">remove_regions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.remove_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.remove_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to delete all regions currently open in a frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.setup_frame">
+<code class="descname">setup_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.setup_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.setup_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares a frame by opening a file, calling <code class="docutils literal"><span class="pre">format_frame</span></code> method, loading regions, and centering on the source position.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="check_images.SourceImageViewer.zoom_in">
+<code class="descname">zoom_in</code><span class="sig-paren">(</span><em>zoom=5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/check_images.html#SourceImageViewer.zoom_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#check_images.SourceImageViewer.zoom_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell DS9 to zoom in.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Karlen Shahinyan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.7',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

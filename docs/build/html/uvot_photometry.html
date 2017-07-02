@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>uvot_photometry module &mdash; swift-uvot-python-tools 0.7 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="swift-uvot-python-tools 0.7 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> swift-uvot-python-tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">uvot_photometry module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">swift-uvot-python-tools</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>uvot_photometry module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/uvot_photometry.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-uvot_photometry">
+<span id="uvot-photometry-module"></span><h1>uvot_photometry module<a class="headerlink" href="#module-uvot_photometry" title="Permalink to this headline">¶</a></h1>
+<p>Use <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> to get aperture photometry from UVOT images.</p>
+<dl class="class">
+<dt id="uvot_photometry.MeasureSource">
+<em class="property">class </em><code class="descclassname">uvot_photometry.</code><code class="descname">MeasureSource</code><span class="sig-paren">(</span><em>filepath=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Class to measure photometry on UVOT data using the <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> tool and to parse the results.</p>
+<dl class="attribute">
+<dt id="uvot_photometry.MeasureSource.filepath">
+<code class="descname">filepath</code><a class="headerlink" href="#uvot_photometry.MeasureSource.filepath" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; path of fits image to input into <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="uvot_photometry.MeasureSource.dirpath">
+<code class="descname">dirpath</code><a class="headerlink" href="#uvot_photometry.MeasureSource.dirpath" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; directory containing <code class="docutils literal"><span class="pre">filepath</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="uvot_photometry.MeasureSource.obs">
+<code class="descname">obs</code><a class="headerlink" href="#uvot_photometry.MeasureSource.obs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; observation ID parsed from <code class="docutils literal"><span class="pre">filepath</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="uvot_photometry.MeasureSource.band">
+<code class="descname">band</code><a class="headerlink" href="#uvot_photometry.MeasureSource.band" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; observation band parsed from <code class="docutils literal"><span class="pre">filepath</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uvot_photometry.MeasureSource.get_observation_data">
+<code class="descname">get_observation_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource.get_observation_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource.get_observation_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the output of <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> to extract essential photometry information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">observing band, observing time (MJD), magnitude and 1$sigma$ error in UVOT system, flux and 1$sigma$ error in erg/s/cm$^{2}$/$AA$, flux and 1$sigma$ error in milliJanskies</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="uvot_photometry.MeasureSource.get_observation_time">
+<code class="descname">get_observation_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource.get_observation_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource.get_observation_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses the header of the image corresponding to <code class="docutils literal"><span class="pre">filepath</span></code> to get the start and end time of the observation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the middle of the observation time in ISOt format</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="uvot_photometry.MeasureSource.run_uvotsource">
+<code class="descname">run_uvotsource</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource.run_uvotsource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource.run_uvotsource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper to run the <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> tool for extracting photometry. The input/output file information
+is taken from the class attributes, which are obtained by parsing the provided <code class="docutils literal"><span class="pre">filepath</span></code> argument.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Running this will override previously generated output files with the same names.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">2 elements corresponding to the output and error messages from <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Karlen Shahinyan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.7',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

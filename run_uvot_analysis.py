@@ -12,10 +12,6 @@ import glob
 import numpy
 import argparse
 
-from astroquery.simbad import Simbad
-from astroquery.ned import Ned
-
-
 def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
 
     '''Function to correct for Galactic extinction using values from IRSA
@@ -60,6 +56,12 @@ def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
     else:
         return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
 
+
+
+    
+
+
+
 class uvot_runner(object):
     '''Wrapper class for the wrappers! Class to coordinate running the different stages of the UVOT analysis.
 
@@ -79,7 +81,20 @@ class uvot_runner(object):
         self.bkg_dec = None
         self.ebminv = None
 
-
+    def query_for_source_coords(self, source_name):
+    
+        import astroquery
+        from astroquery.ned import Ned
+        try:
+            coords = Ned.query_object(source_name)
+            self.source_ra, self.source_dec = coords['RA(deg)'][0], coords['DEC(deg)'][0]
+        except astroquery.exceptions.RemoteServiceError:
+            from astroquery.simbad import Simbad
+            coords = Simbad.query_object(source_name)
+            self.source_ra, self.source_dec = coords['RA'][0], coords['DEC'][0]
+            if not coords:
+                raise astroquery.exceptions.RemoteServiceError('Both NED and SIMBAD queries failed for the provided source name. Maybe try supplying coordinates or selecting the source position interactively.')
+    
     def uvot_primer(self, prime_source = False):
         '''Makes user identify a location for the background region (and source location) using a DS9 window.
 
@@ -93,18 +108,19 @@ class uvot_runner(object):
         #launching a ds9 window
 
         iv = SourceImageViewer()
+
+        if prime_source:
+            self.source_ra, self.source_dec = iv.prime_source()
+
+        iv.source_ra,iv.source_dec = self.source_ra, self.source_dec
         # picking first optical filter image for user background selection,
         # or just the first image, if there aren't optical ones.
         try:
             iv.filepath = next(filepath for filepath in filepaths if 'ubb' in filepath or 'uvv' in filepath)
         except:
-            iv.filepath = filepaths[0]
+            iv.filepath = self.filepaths[0]
 
         self.bkg_ra, self.bkg_dec = iv.prime_bkg()
-
-        if prime_source:
-            self.source_ra, self.source_dec = iv.prime_source()
-
 
 
     def uvot_detecter(self):
@@ -130,11 +146,9 @@ class uvot_runner(object):
         '''Wrapper for viewing images from all requested observations to verify the source and background regions and image quality.
         '''
 
-        import pyds9 as ds9
         from check_images import SourceImageViewer
 
         #launching a ds9 window
-        d = ds9.DS9()
 
         for filepath in self.filepaths:
 
@@ -143,9 +157,9 @@ class uvot_runner(object):
             iv.filepath = filepath
             iv.source_ra = self.source_ra 
             iv.source_dec = self.source_dec
-            iv.bkg_ra = self.bcg_ra 
+            iv.bkg_ra = self.bkg_ra 
             iv.bkg_dec = self.bkg_dec
-            iv.setup_frame(d)
+            iv.setup_frame()
             x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
 
 
@@ -220,14 +234,14 @@ def main():
     #use all observations in the provided directory unless a specific obs is requested
     if args.f:
         filedirs = np.genfromtxt(args.f,dtype=str)
-        tmppaths = [glob.iglob('%s/uvot/image/*sk.img.gz'%d) for d in filedirs ]
+        tmppaths = [glob.glob('%s/uvot/image/*sk.img.gz'%d) for d in filedirs ]
         filepaths = [path for paths in tmppaths for path in paths]
     elif not args.obs:
-        filepaths = glob.iglob('%s/000*/uvot/image/*sk.img.gz' %args.p)#setting up filepaths
+        filepaths = glob.glob('%s/000*/uvot/image/*sk.img.gz' %args.p)#setting up filepaths
     else:
         obspath = os.path.join(args.p,str(args.obs))
         if os.path.exists(obspath):
-            filepaths = glob.iglob('%s/uvot/image/*sk.img.gz'%obspath)
+            filepaths = glob.glob('%s/uvot/image/*sk.img.gz'%obspath)
         else:
             raise NameError('%s does not exist.' %obspath)
 
@@ -248,9 +262,8 @@ def main():
         #need to get the parsing right
         runner.source_ra, runner.source_dec = args.c
     elif args.s:
-        #need to get the parsing right
-        coords = ned.query_object(args.s)
-        runner.source_ra, runner.source_dec = coords
+        #query NED for the source position using provided source name and set source_ra and source_dec
+        runner.query_for_source_coords(args.s)
     else:
         prime_source = True
         print 'Source not specified by either -c or -s option. Will make user select the source location interactively.'
