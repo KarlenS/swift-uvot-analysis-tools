@@ -27,10 +27,12 @@ class PositionExtractor(object):
     '''
 
     def __init__(self):
-        self.source_ra = None 
-        self.source_dec = None 
-        self.bkg_ra = None
-        self.bkg_dec = None
+        #self.source_ra = None 
+        #self.source_dec = None 
+        self.source_coords = None
+        #self.bkg_ra = None
+        #self.bkg_dec = None
+        self.bkg_coords = None
         self.filepath = None
         self.detect = None
         self.regfile = None
@@ -52,14 +54,16 @@ class PositionExtractor(object):
         dirpath,filename = path.split(self.filepath)
 
         # write source region file
-        region = 'fk5;circle(%s,%s,5")' %(self.source_ra,self.source_dec)
+        region = 'fk5;circle(%s,%s,5")' %(self.source_coords.ra.value,self.source_coords.dec.value)
+        #region = 'fk5;circle(%s,%s,5")' %(self.source_ra,self.source_dec)
         regfile = open(self.regfile,'w')
         regfile.write(region)
         regfile.close()
 
         # write background region file if it doesn't already exist 
         if not path.isfile(self.bkgregfile):
-            bkgregion = 'fk5;circle(%s,%s,20")' %(self.bkg_ra,self.bkg_dec)
+            bkgregion = 'fk5;circle(%s,%s,20")' %(self.bkg_coords.ra.value,self.bkg_coords.dec.value)
+            #bkgregion = 'fk5;circle(%s,%s,20")' %(self.bkg_ra,self.bkg_dec)
             bkgregfile = open(self.bkgregfile,'w')
             bkgregfile.write(bkgregion)
             bkgregfile.close()
@@ -83,7 +87,7 @@ class PositionExtractor(object):
         '''Uses the results of ``UVOTDETECT`` to get the refined source position per image. If this is unsuccessful, the default coordinates provided to the class are used. Once this is sorted out, the function orders the region file creation.
         '''
 
-        c = SkyCoord('%s %s' %(self.source_ra,self.source_dec),unit=(u.hourangle, u.deg))
+        #c = SkyCoord('%s %s' %(self.source_ra,self.source_dec),unit=(u.hourangle, u.deg))
 
         try:
             data = fits.getdata(self.detect)
@@ -110,13 +114,14 @@ class PositionExtractor(object):
 
         if np.size(data) > 0:
             # finds the nearest source in UVOTDETECT to default coordinates, and updates coordinate attributes
-            source_ind = np.argmin(np.abs(data['RA']-c.ra.value) + np.abs(data['DEC']-c.dec.value))
+            source_ind = np.argmin(np.abs(data['RA']-self.source_coords.ra.value) + np.abs(data['DEC']-self.source_coords.dec.value))
             c_detect = SkyCoord(data[source_ind]['RA'],data[source_ind]['DEC'],unit='deg')
-            self.source_ra = data[source_ind]['RA']
-            self.source_dec = data[source_ind]['DEC']
+            #self.source_ra = data[source_ind]['RA']
+            #self.source_dec = data[source_ind]['DEC']
 
             # only accept the nearest source if it is within about 2 arcseconds of the default position and order creation of region files
-            if c_detect.separation(c).value < 6.E-4:
+            if c_detect.separation(self.source_coords).value < 6.E-4:
+                self.source_coords = SkyCoord('%s %s' %(data[source_ind]['RA'],data[source_ind]['DEC']),unit=(u.deg, u.deg))
                 self.createRegionFiles()
             else:
                 print 'Nearest source too far away (more than 2 arcsecs)! Defaulting to SIMBAD coords.'
@@ -154,3 +159,5 @@ class PositionExtractor(object):
         self.detect = outfile
         self.regfile = regfile
         self.bkgregfile = bkgregfile
+
+        return tmp.communicate()

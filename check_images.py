@@ -7,6 +7,10 @@ import os.path as path
 import pyds9 as ds9
 import pyregion
 
+from astropy.coordinates import SkyCoord
+from astropy import units as u
+
+
 class SourceImageViewer(ds9.DS9):
     '''Inherits from a `pyds9`_ object. 
     Initialize the class with ``filepath`` input. The radii of source and background are set to suggested UVOT values.
@@ -30,10 +34,12 @@ class SourceImageViewer(ds9.DS9):
         #this will launch a DS9 window if there isn't one already or connect to an existing one
         super(SourceImageViewer,self).__init__()
         self.filepath = filepath
-        self.source_ra = None 
-        self.source_dec = None
-        self.bkg_ra = None
-        self.bkg_dec = None
+        self.source_coords = None
+        self.bkg_coords = None
+        #self.source_ra = None 
+        #self.source_dec = None
+        #self.bkg_ra = None
+        #self.bkg_dec = None
 
     def open_fits(self):
         '''Tell DS9 to open ``filepath``
@@ -47,7 +53,7 @@ class SourceImageViewer(ds9.DS9):
         args:
             radius (float): radius of the source region
         ''' 
-        reg = 'fk5; circle(%s,%s,%s")' %(self.source_ra,self.source_dec,radius)
+        reg = 'fk5; circle(%s,%s,%s")' %(self.source_coords.ra.value,self.source_coords.dec.value,radius)
         self.set('regions', reg);
 
     def display_bkg_region(self,radius = 20.):
@@ -57,7 +63,8 @@ class SourceImageViewer(ds9.DS9):
             radius (float): radius of the background region
         ''' 
 
-        bkgreg = 'fk5; circle(%s,%s,%s")' %(self.bkg_ra,self.bkg_dec,radius)
+        bkgreg = 'fk5; circle(%s,%s,%s")' %(self.bkg_coords.ra.value,self.bkg_coords.dec.value,radius)
+        #bkgreg = 'fk5; circle(%s,%s,%s")' %(self.bkg_ra,self.bkg_dec,radius)
         self.set('regions', bkgreg)
 
     def remove_regions(self):
@@ -88,8 +95,9 @@ class SourceImageViewer(ds9.DS9):
             bkgregion = pyregion.open(bkgregfile)
             bkg_ra = bkgregion[0].coord_list[0]
             bkg_dec = bkgregion[0].coord_list[1]
-            self.bkg_ra = bkg_ra
-            self.bkg_dec = bkg_dec
+            #self.bkg_ra = bkg_ra
+            #self.bkg_dec = bkg_dec
+            self.bkg_coords = SkyCoord('%s %s' %(bkg_ra, bkg_dec),unit=(u.deg, u.deg))
         except IOError:
             print 'Background region file missing. Will try default coordinates.'
         
@@ -101,8 +109,10 @@ class SourceImageViewer(ds9.DS9):
             region = pyregion.open(regfile)
             ra = region[0].coord_list[0]
             dec = region[0].coord_list[1]
-            self.source_ra = ra
-            self.source_dec = dec
+
+            self.source_coords = SkyCoord('%s %s' %(ra,dec),unit=(u.deg, u.deg))
+            #self.source_ra = ra
+            #self.source_dec = dec
         except IOError:
             print 'Region file missing. Only showing default coordinates, if any.'
 
@@ -111,7 +121,7 @@ class SourceImageViewer(ds9.DS9):
     def center_on_source(self):
         '''Tell DS9 to center the frame on the source location.
         '''
-        centercmd = 'pan to %s %s wcs fk5' %(self.source_ra,self.source_dec)
+        centercmd = 'pan to %s %s wcs fk5' %(self.source_coords.ra.value,self.source_coords.dec.value)
         self.set(centercmd)
 
     def zoom_in(self,zoom = 5):
@@ -167,7 +177,8 @@ class SourceImageViewer(ds9.DS9):
             self.display_source_region()
             print 'Use the DS9 window to select a location for the background region.'
             coords = self.get_user_coords()
-            self.bkg_ra, self.bkg_dec = coords.split()
+            bkg_ra, bkg_dec = coords.split()
+            self.bkg_coords = SkyCoord('%s %s' %(bkg_ra,bkg_dec),unit=(u.deg, u.deg))
             self.display_bkg_region()
 
             response = raw_input('Happy with the background selection (y / anything_else)?\n') 
@@ -179,7 +190,7 @@ class SourceImageViewer(ds9.DS9):
                 self.remove_regions()
 
         self.set('quit')
-        return [self.bkg_ra,self.bkg_dec]
+        return self.bkg_coords 
 
     def prime_source(self):
         '''Primes the user to select a position for a source. 
@@ -199,7 +210,8 @@ class SourceImageViewer(ds9.DS9):
 
             print 'Use the DS9 window to select a source region.'
             coords = self.get_user_coords()
-            self.source_ra, self.source_dec = coords.split()
+            ra, dec = coords.split()
+            self.source_coords = SkyCoord('%s %s' %(ra,dec),unit=(u.deg, u.deg))
             self.display_source_region()
 
             response = raw_input('Happy with source location selection (y/n)?\n') 
@@ -210,5 +222,5 @@ class SourceImageViewer(ds9.DS9):
                 print 'Fine, try again...'
                 self.remove_regions()
 
-        self.set('quit')
-        return [self.bkg_ra,self.bkg_dec]
+        #self.set('quit')
+        return self.source_coords 

@@ -9,8 +9,11 @@ The process consists of three primary steps:
 import os.path
 import sys
 import glob
-import numpy
+import numpy as np
 import argparse
+
+from astropy.coordinates import SkyCoord
+from astropy import units as u
 
 def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
 
@@ -46,7 +49,7 @@ def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
     if not EBminV:
         from astroquery.irsa_dust import IrsaDust
         extTable = IrsaDust.get_extinction_table(source_coords)
-        EBminV = np.median(extTable['A_SandF']/x['A_over_E_B_V_SandF'])
+        EBminV = np.median(extTable['A_SandF']/extTable['A_over_E_B_V_SandF'])
     
     #calculate extinction magnitude
     A_lambda = R_lambda[filtr]*EBminV
@@ -55,11 +58,6 @@ def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
         return val - R_lambda[filtr]*EBminV
     else:
         return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
-
-
-
-    
-
 
 
 class uvot_runner(object):
@@ -75,10 +73,12 @@ class uvot_runner(object):
     '''
     def __init__(self):
         self.filepaths = None
-        self.source_ra = None
-        self.source_dec = None
-        self.bkg_ra = None
-        self.bkg_dec = None
+        self.source_coords = None
+        self.bkg_coords = None
+        #self.source_ra = None
+        #self.source_dec = None
+        #self.bkg_ra = None
+        #3self.bkg_dec = None
         self.ebminv = None
 
     def query_for_source_coords(self, source_name):
@@ -87,11 +87,13 @@ class uvot_runner(object):
         from astroquery.ned import Ned
         try:
             coords = Ned.query_object(source_name)
-            self.source_ra, self.source_dec = coords['RA(deg)'][0], coords['DEC(deg)'][0]
+            self.source_coords = SkyCoord('%s %s' %(coords['RA(deg)'][0], coords['DEC(deg)'][0]),unit=(u.deg, u.deg))
+            #self.source_ra, self.source_dec = coords['RA(deg)'][0], coords['DEC(deg)'][0]
         except astroquery.exceptions.RemoteServiceError:
             from astroquery.simbad import Simbad
             coords = Simbad.query_object(source_name)
-            self.source_ra, self.source_dec = coords['RA'][0], coords['DEC'][0]
+            self.source_coords = SkyCoord('%s %s' %(coords['RA'][0], coords['DEC'][0]),unit=(u.hourangle, u.deg))
+            #self.source_ra, self.source_dec = coords['RA'][0], coords['DEC'][0]
             if not coords:
                 raise astroquery.exceptions.RemoteServiceError('Both NED and SIMBAD queries failed for the provided source name. Maybe try supplying coordinates or selecting the source position interactively.')
     
@@ -109,18 +111,23 @@ class uvot_runner(object):
 
         iv = SourceImageViewer()
 
-        if prime_source:
-            self.source_ra, self.source_dec = iv.prime_source()
-
-        iv.source_ra,iv.source_dec = self.source_ra, self.source_dec
         # picking first optical filter image for user background selection,
         # or just the first image, if there aren't optical ones.
         try:
-            iv.filepath = next(filepath for filepath in filepaths if 'ubb' in filepath or 'uvv' in filepath)
+            iv.filepath = next(filepath for filepath in self.filepaths if 'ubb' in filepath or 'uvv' in filepath)
         except:
             iv.filepath = self.filepaths[0]
 
-        self.bkg_ra, self.bkg_dec = iv.prime_bkg()
+        if prime_source:
+            #self.source_ra, self.source_dec = iv.prime_source()
+            self.source_coords = iv.prime_source()
+
+        #iv.source_ra,iv.source_dec = self.source_ra, self.source_dec
+        iv.source_coords = self.source_coords
+
+        #self.bkg_ra, self.bkg_dec = iv.prime_bkg()
+        #bkg_ra, bkg_dec = iv.prime_bkg()
+        self.bkg_coords = iv.prime_bkg() 
 
 
     def uvot_detecter(self):
@@ -131,13 +138,15 @@ class uvot_runner(object):
 
         pos = PositionExtractor()
 
-        pos.source_ra = self.source_ra
-        pos.source_dec = self.source_dec
+        pos.source_coords = self.source_coords
+        pos.bkg_coords = self.bkg_coords
+        #pos.source_ra = self.source_ra
+        #pos.source_dec = self.source_dec
 
         for filepath in self.filepaths:
             print 'working on %s...' %filepath 
             pos.filepath = filepath
-            pos.run_uvotdetect()
+            out, err = pos.run_uvotdetect()
             pos.getNearestSource()
             pos.cleanup()
 
@@ -153,12 +162,15 @@ class uvot_runner(object):
         for filepath in self.filepaths:
 
             iv = SourceImageViewer()
+        
+            iv.source_coords = self.source_coords
+            iv.bkg_coords = self.bkg_coords
 
             iv.filepath = filepath
-            iv.source_ra = self.source_ra 
-            iv.source_dec = self.source_dec
-            iv.bkg_ra = self.bkg_ra 
-            iv.bkg_dec = self.bkg_dec
+            #iv.source_ra = self.source_ra 
+            #iv.source_dec = self.source_dec
+            #iv.bkg_ra = self.bkg_ra 
+            #iv.bkg_dec = self.bkg_dec
             iv.setup_frame()
             x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
 
@@ -177,11 +189,10 @@ class uvot_runner(object):
         '''
         
         from astropy.table import Table
-        from astropy import units as u
         from uvot_photometry import MeasureSource
     
         #creating Astropy table for storing the photometry information
-        ptab = Table(names=('filter','MJD','Mag','MagErr','FluxDensity','FluxDensityErr','FluxDensityJy','FluxDensityJyErr','FluxExtCorr','FluxExtcorrErr'),
+        ptab = Table(names=('filter','MJD','Mag','MagErr','FluxDensity','FluxDensityErr','FluxDensityJy','FluxDensityJyErr','FluxExtCorr','FluxExtCorrErr'),
                                 dtype=('S2','f8','f8','f8','f8','f8','f8','f8','f8','f8'))
     
         #defining units for each column
@@ -192,8 +203,8 @@ class uvot_runner(object):
         ptab['FluxDensityErr'].unit = u.erg/u.cm/u.cm/u.second/u.AA
         ptab['FluxDensityJy'].unit = u.Jy
         ptab['FluxDensityJyErr'].unit = u.Jy
-        ptab['Flux'].unit = u.erg/u.cm/u.cm/u.second 
-        ptab['FluxErr'].unit = u.erg/u.cm/u.cm/u.second
+        ptab['FluxExtCorr'].unit = u.erg/u.cm/u.cm/u.second 
+        ptab['FluxExtCorrErr'].unit = u.erg/u.cm/u.cm/u.second
     
         #run through all image files to perform and/or extract photometry
         for filepath in self.filepaths:
@@ -205,8 +216,8 @@ class uvot_runner(object):
             objphot = measurer.get_observation_data()
     
             #getting extinction-corrected fluxes
-            flux = correct_extinction(objphot[-4],filtr,EBminV = self.ebminv)
-            fluxerr = correct_extinction(objphot[-3],filtr,EBminV = self.ebminv)
+            flux = correct_extinction(objphot[-4],filtr,self.source_coords,EBminV = self.ebminv)
+            fluxerr = correct_extinction(objphot[-3],filtr,self.source_coords,EBminV = self.ebminv)
             objphot.append(flux)
             objphot.append(fluxerr)
     
@@ -236,19 +247,20 @@ def main():
         filedirs = np.genfromtxt(args.f,dtype=str)
         tmppaths = [glob.glob('%s/uvot/image/*sk.img.gz'%d) for d in filedirs ]
         filepaths = [path for paths in tmppaths for path in paths]
+        print filepaths
     elif not args.obs:
         filepaths = glob.glob('%s/000*/uvot/image/*sk.img.gz' %args.p)#setting up filepaths
     else:
         obspath = os.path.join(args.p,str(args.obs))
         if os.path.exists(obspath):
             filepaths = glob.glob('%s/uvot/image/*sk.img.gz'%obspath)
+            print 'Will use images from observation %s only' %args.obs
         else:
             raise NameError('%s does not exist.' %obspath)
 
     #raise an error if an operation is not selected.
     if not ( args.measure or args.check or  args.detect or  args.extract_only ):
         raise parser.error('Nothing to do. Use --detect, --check, --measure, or --extract_only flags for desired operations or -h for help.')
-
 
 
     #run all the wrappers, though unless --detect --check or --measure are given, nothing will happen!
@@ -260,7 +272,8 @@ def main():
     prime_source = False
     if args.c:
         #need to get the parsing right
-        runner.source_ra, runner.source_dec = args.c
+        runner.source_coords = SkyCoord(args.c)
+        #runner.source_ra, runner.source_dec = args.c
     elif args.s:
         #query NED for the source position using provided source name and set source_ra and source_dec
         runner.query_for_source_coords(args.s)
@@ -269,15 +282,15 @@ def main():
         print 'Source not specified by either -c or -s option. Will make user select the source location interactively.'
         print 'Quit (ctrl-C) and specifiy source name with -s or source coordinates with -c options if the source is known.'
 
-
     #get user to identify background region (and source region if coordinates or source name are not supplied)
-    runner.uvot_primer(prime_source=prime_source)
-
 
     if args.detect:
+        runner.uvot_primer(prime_source=prime_source)
         runner.uvot_detecter()
 
     if args.check:
+        print 'User selected coordinates will only be used if region files are missing.'
+        runner.uvot_primer(prime_source=prime_source)
         runner.uvot_checker()
 
     #can set up options for multiple formats here, but will probably default to fits
