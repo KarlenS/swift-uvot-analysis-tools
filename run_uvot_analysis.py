@@ -5,6 +5,9 @@ The process consists of three primary steps:
     * Run ``UVOTDETECT`` to get a proper centroid for the source for each observation, and generate region files for source and background regions,
     * Visually check images for potential issues/artifacts (and manually reject observations),
     * Run ``UVOTSOURCE`` to obtain photometry and parse data for light curve and SED use.
+
+    TODO:
+        Add automatic data downloading (possibly with astroquery.heasarc)
 '''
 import os.path
 import sys
