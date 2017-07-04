@@ -15,85 +15,42 @@ import argparse
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-def correct_extinction(val, filtr, source_coords, EBminV = None, mag = False):
-
-    '''Function to correct for Galactic extinction using values from IRSA
-
-    
-    Note:
-        Central wavelengths for UVOT filters are taken from `Poole et al. (2008)`_.               
-        :math:`R_{\lambda}` values are derived using the `York Extinction Solver`_.
-
-    
-    Args:
-        val (float): flux or mag requiring extinction correction (flux is assumed, unless ``mag = True``)
-        filtr (str): UVOT filter name (vv, uu, bb, w1, m2, w2)
-        source_coords (`astropy.coordinates.SkyCoord`_): Source position to be used for querying the amount of extinction
-    
-    Returns:
-        float: Extinction-corrected flux (erg/s/cm2) or magnitude (mag)
-
-    .. _astropy.coordinates.SkyCoord:
-        http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord
-    .. _Poole et al. (2008):
-        http://adsabs.harvard.edu/abs/2008MNRAS.383..627P
-    .. _York Extinction Solver: 
-        http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi        
-    '''
-
-    central_wav = {'uu':3465.,'w1':2600.,'m2':2246.,'w2':1928.,'bb':4392.,'vv':5468.}
-    R_lambda = {'uu':4.89172,'w1':6.55663,'m2':9.15389,'w2':8.10997,'bb':4.00555,'vv':2.99692}
-
-
-    #query for the E(B-V) value, unless user specifies one
-    if not EBminV:
-        from astroquery.irsa_dust import IrsaDust
-        extTable = IrsaDust.get_extinction_table(source_coords)
-        EBminV = np.median(extTable['A_SandF']/extTable['A_over_E_B_V_SandF'])
-    
-    #calculate extinction magnitude
-    A_lambda = R_lambda[filtr]*EBminV
-
-    if mag:
-        return val - R_lambda[filtr]*EBminV
-    else:
-        return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
-
 
 class uvot_runner(object):
     '''Wrapper class for the wrappers! Class to coordinate running the different stages of the UVOT analysis.
 
     Attributes:
         filepath (str): path of image file used for analysis
-        source_ra (float): right ascension coordinate of source
-        source_dec (float): declination coordinate of source
-        bkg_ra (float): right ascension coordinate of background region center
-        bkg_dec (float): declination coordinate of background region center
+        source_coords (`astropy.coordinates.SkyCoord`_): coordinates of the source
+        bkg_coords (`astropy.coordinates.SkyCoord`_): coordinates of the background region center
         ebminv (float): E(B-V) value for the source.
+
+    .. _astropy.coordinates.SkyCoord:
+        http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord
     '''
     def __init__(self):
         self.filepaths = None
         self.source_coords = None
         self.bkg_coords = None
-        #self.source_ra = None
-        #self.source_dec = None
-        #self.bkg_ra = None
-        #3self.bkg_dec = None
         self.ebminv = None
 
     def query_for_source_coords(self, source_name):
+        '''Queries NED or SIMBAD databases for coordinates using a source name.
+
+        Args:
+            source_name (str): source name to use for querying for coordinates 
+        '''
     
         import astroquery
         from astroquery.ned import Ned
+
         try:
             coords = Ned.query_object(source_name)
             self.source_coords = SkyCoord('%s %s' %(coords['RA(deg)'][0], coords['DEC(deg)'][0]),unit=(u.deg, u.deg))
-            #self.source_ra, self.source_dec = coords['RA(deg)'][0], coords['DEC(deg)'][0]
         except astroquery.exceptions.RemoteServiceError:
             from astroquery.simbad import Simbad
             coords = Simbad.query_object(source_name)
             self.source_coords = SkyCoord('%s %s' %(coords['RA'][0], coords['DEC'][0]),unit=(u.hourangle, u.deg))
-            #self.source_ra, self.source_dec = coords['RA'][0], coords['DEC'][0]
             if not coords:
                 raise astroquery.exceptions.RemoteServiceError('Both NED and SIMBAD queries failed for the provided source name. Maybe try supplying coordinates or selecting the source position interactively.')
     
@@ -119,14 +76,10 @@ class uvot_runner(object):
             iv.filepath = self.filepaths[0]
 
         if prime_source:
-            #self.source_ra, self.source_dec = iv.prime_source()
             self.source_coords = iv.prime_source()
 
-        #iv.source_ra,iv.source_dec = self.source_ra, self.source_dec
         iv.source_coords = self.source_coords
 
-        #self.bkg_ra, self.bkg_dec = iv.prime_bkg()
-        #bkg_ra, bkg_dec = iv.prime_bkg()
         self.bkg_coords = iv.prime_bkg() 
 
 
@@ -140,8 +93,6 @@ class uvot_runner(object):
 
         pos.source_coords = self.source_coords
         pos.bkg_coords = self.bkg_coords
-        #pos.source_ra = self.source_ra
-        #pos.source_dec = self.source_dec
 
         for filepath in self.filepaths:
             print 'working on %s...' %filepath 
@@ -167,10 +118,6 @@ class uvot_runner(object):
             iv.bkg_coords = self.bkg_coords
 
             iv.filepath = filepath
-            #iv.source_ra = self.source_ra 
-            #iv.source_dec = self.source_dec
-            #iv.bkg_ra = self.bkg_ra 
-            #iv.bkg_dec = self.bkg_dec
             iv.setup_frame()
             x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
 
@@ -209,18 +156,13 @@ class uvot_runner(object):
         #run through all image files to perform and/or extract photometry
         for filepath in self.filepaths:
             measurer = MeasureSource(filepath)
-            filtr = measurer.band
+            measurer.source_coords = self.source_coords
+
             if measure:
                 tmp = measurer.run_uvotsource()
              
             objphot = measurer.get_observation_data()
-    
-            #getting extinction-corrected fluxes
-            flux = correct_extinction(objphot[-4],filtr,self.source_coords,EBminV = self.ebminv)
-            fluxerr = correct_extinction(objphot[-3],filtr,self.source_coords,EBminV = self.ebminv)
-            objphot.append(flux)
-            objphot.append(fluxerr)
-    
+
             ptab.add_row(objphot)
         
         return ptab.group_by('filter')
@@ -273,7 +215,6 @@ def main():
     if args.c:
         #need to get the parsing right
         runner.source_coords = SkyCoord(args.c)
-        #runner.source_ra, runner.source_dec = args.c
     elif args.s:
         #query NED for the source position using provided source name and set source_ra and source_dec
         runner.query_for_source_coords(args.s)
@@ -297,7 +238,7 @@ def main():
     if args.measure or args.extract_only:
         photometry = runner.uvot_measurer(measure = not args.extract_only)
         #photometry.write('OJ287_uvot_photometry_wExtCorr.dat',format='ascii.commented_header')
-        photometry.write(args.o)
+        photometry.write(args.o,overwrite=True)
 
 
 if __name__ == '__main__':

@@ -19,15 +19,15 @@ class SourceImageViewer(ds9.DS9):
 
     Attributes:
         filepath (str): path to image to display in DS9
-        source_ra (str): RA coordinate of source of interest
-        source_dec (str): Dec coordinate of source of interest
-        bkg_ra (str): RA coordinate of background region center
-        bkg_dec (str): Dec coordinate of background region center
+        source_coords (`astropy.coordinates.SkyCoord`_): Coordinates of the source
+        bkg_coords (`astropy.coordinates.SkyCoord`_): Coordinate of background region center
 
     .. _pyds9:
         https://github.com/ericmandel/pyds9
     .. _aperture correction in UVOTSOURCE:
         https://heasarc.nasa.gov/lheasoft/ftools/headas/uvotsource.html
+    .. _astropy.coordinates.SkyCoord:
+        http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord
     '''
 
     def __init__(self,filepath=''):
@@ -36,10 +36,6 @@ class SourceImageViewer(ds9.DS9):
         self.filepath = filepath
         self.source_coords = None
         self.bkg_coords = None
-        #self.source_ra = None 
-        #self.source_dec = None
-        #self.bkg_ra = None
-        #self.bkg_dec = None
 
     def open_fits(self):
         '''Tell DS9 to open ``filepath``
@@ -64,7 +60,6 @@ class SourceImageViewer(ds9.DS9):
         ''' 
 
         bkgreg = 'fk5; circle(%s,%s,%s")' %(self.bkg_coords.ra.value,self.bkg_coords.dec.value,radius)
-        #bkgreg = 'fk5; circle(%s,%s,%s")' %(self.bkg_ra,self.bkg_dec,radius)
         self.set('regions', bkgreg)
 
     def remove_regions(self):
@@ -95,8 +90,6 @@ class SourceImageViewer(ds9.DS9):
             bkgregion = pyregion.open(bkgregfile)
             bkg_ra = bkgregion[0].coord_list[0]
             bkg_dec = bkgregion[0].coord_list[1]
-            #self.bkg_ra = bkg_ra
-            #self.bkg_dec = bkg_dec
             self.bkg_coords = SkyCoord('%s %s' %(bkg_ra, bkg_dec),unit=(u.deg, u.deg))
         except IOError:
             print 'Background region file missing. Will try default coordinates.'
@@ -111,8 +104,6 @@ class SourceImageViewer(ds9.DS9):
             dec = region[0].coord_list[1]
 
             self.source_coords = SkyCoord('%s %s' %(ra,dec),unit=(u.deg, u.deg))
-            #self.source_ra = ra
-            #self.source_dec = dec
         except IOError:
             print 'Region file missing. Only showing default coordinates, if any.'
 
@@ -222,5 +213,4 @@ class SourceImageViewer(ds9.DS9):
                 print 'Fine, try again...'
                 self.remove_regions()
 
-        #self.set('quit')
         return self.source_coords 
