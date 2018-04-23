@@ -1,3 +1,5 @@
+#!/local/gammasoft/anaconda2/bin/python
+
 '''
 Use ``UVOTSOURCE`` to get aperture photometry from UVOT images.
 '''
@@ -22,17 +24,21 @@ class MeasureSource(object):
         http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord
     '''
 
-    def __init__(self,filepath=''):
+    def __init__(self,filepath='',default_fs = True):
 
         self.filepath = filepath
         self.source_coords = None
         
         #parse filename, directory name, obs ID, and band from filepath
         dirpath,filename = path.split(self.filepath)
-        base,extn = filename.split('_')
         self.dirpath = dirpath
-        self.obs = base[2:-3]
-        self.band = base[-2:]
+        if default_fs:
+            base,extn = filename.split('_')
+            self.obs = base[2:-3]
+            self.band = base[-2:]
+        else:
+            self.obs = filename[8:23]
+            self.band = filename[5:7]
 
     def correct_extinction(self, val, filtr, EBminV = None, mag = False):
     
@@ -109,9 +115,20 @@ class MeasureSource(object):
         mainfits = fits.open(self.filepath)
         obs_start = Time(mainfits[0].header['DATE-OBS'],format='isot')
         obs_end = Time(mainfits[0].header['DATE-END'],format='isot')
+
+
+        try:
+            if mainfits[1].header['ASPCORR'] == 'DIRECT':
+                aspflag = True
+            else:
+                aspflag = False
+        except KeyError:
+            print 'Assuming apsflag is fine for %s' %self.filepath
+            aspflag = True
+
         mainfits.close()
 
-        return obs_start + (obs_end - obs_start)/2
+        return obs_start + (obs_end - obs_start)/2,aspflag 
 
     def get_observation_data(self):
         '''Parse the output of ``UVOTSOURCE`` to extract essential photometry information.
@@ -135,7 +152,7 @@ class MeasureSource(object):
                 return None
 
 
-        obstime = self.get_observation_time()
+        obstime,corrflg = self.get_observation_time()
         mag = data['MAG'][0]
         magerr = data['MAG_ERR'][0]
         flux = data['FLUX_AA'][0]

@@ -1,0 +1,274 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>uvot_sed &mdash; swift-uvot-python-tools 0.7 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="swift-uvot-python-tools 0.7 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> swift-uvot-python-tools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">swift-uvot-python-tools</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>uvot_sed</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for uvot_sed</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="k">import</span> <span class="n">copyfile</span><span class="p">,</span><span class="n">copyfileobj</span>
+<span class="kn">from</span> <span class="nn">source_position</span> <span class="k">import</span> <span class="n">PositionExtractor</span>
+<span class="kn">from</span> <span class="nn">uvot_photometry</span> <span class="k">import</span> <span class="n">MeasureSource</span>
+<span class="kn">from</span> <span class="nn">astropy.time</span> <span class="k">import</span> <span class="n">Time</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+
+
+<div class="viewcode-block" id="MakeSED"><a class="viewcode-back" href="../uvot_sed.html#uvot_sed.MakeSED">[docs]</a><span class="k">class</span> <span class="nc">MakeSED</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filelist</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filelist</span> <span class="o">=</span> <span class="n">filelist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;vv&#39;</span><span class="p">,</span><span class="s1">&#39;bb&#39;</span><span class="p">,</span><span class="s1">&#39;uu&#39;</span><span class="p">,</span><span class="s1">&#39;w1&#39;</span><span class="p">,</span><span class="s1">&#39;w2&#39;</span><span class="p">,</span><span class="s1">&#39;m2&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sortedpaths</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MakeSED.sortFilelistByFilter"><a class="viewcode-back" href="../uvot_sed.html#uvot_sed.MakeSED.sortFilelistByFilter">[docs]</a>    <span class="k">def</span> <span class="nf">sortFilelistByFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">fdict</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">))</span>
+        <span class="n">filelistarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filelist</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">filtr</span> <span class="ow">in</span> <span class="n">fdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">indx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">([</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">filtr</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">filelistarr</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">indx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">fdict</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fdict</span><span class="p">[</span><span class="n">filtr</span><span class="p">],</span><span class="n">filelistarr</span><span class="p">[</span><span class="n">indx</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">fdict</span> </div>
+        
+
+<div class="viewcode-block" id="MakeSED.combineFits"><a class="viewcode-back" href="../uvot_sed.html#uvot_sed.MakeSED.combineFits">[docs]</a>    <span class="k">def</span> <span class="nf">combineFits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+
+        <span class="n">sumfile</span> <span class="o">=</span> <span class="s1">&#39;summed_image.fits&#39;</span>
+        <span class="n">sumfilegz</span> <span class="o">=</span> <span class="s1">&#39;summed_image.gz&#39;</span>
+        <span class="n">filepaths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">filtr</span><span class="p">,</span><span class="n">paths</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sortedpaths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">firstfile</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">extfile</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">filtr</span><span class="p">,</span><span class="n">startdate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">enddate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">sumfile</span><span class="p">)</span>
+            <span class="n">combfile</span> <span class="o">=</span> <span class="s1">&#39;comb_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">extfile</span>
+            <span class="n">nfiles</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="nb">print</span> <span class="s1">&#39;Working on </span><span class="si">%s</span><span class="s1"> filter&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filtr</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+                <span class="n">measurer</span> <span class="o">=</span> <span class="n">MeasureSource</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">obstime</span><span class="p">,</span><span class="n">aspflag</span> <span class="o">=</span> <span class="n">measurer</span><span class="o">.</span><span class="n">get_observation_time</span><span class="p">()</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">obstime</span><span class="o">-</span><span class="n">startdate</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">enddate</span><span class="o">-</span><span class="n">obstime</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1">#print &#39;%s is within the time range.&#39; %f</span>
+                    <span class="n">nfiles</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">firstfile</span><span class="p">:</span>
+                        <span class="n">copyfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">filtr</span><span class="p">,</span><span class="n">startdate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">enddate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">sumfilegz</span><span class="p">))</span>
+                        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">filtr</span><span class="p">,</span><span class="n">startdate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">enddate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">sumfilegz</span><span class="p">),</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+                            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">extfile</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+                                <span class="n">copyfileobj</span><span class="p">(</span><span class="n">f_in</span><span class="p">,</span><span class="n">f_out</span><span class="p">)</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">filtr</span><span class="p">,</span><span class="n">startdate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">enddate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">sumfilegz</span><span class="p">))</span>
+
+                        <span class="n">firstfile</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">elif</span> <span class="n">aspflag</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">runFappend</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">extfile</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span> <span class="s1">&#39;FUUUUCK THIS FILE: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">f</span>
+                        <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">nfiles</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="s1">&#39;Filter </span><span class="si">%s</span><span class="s1"> had no files to combine&#39;</span> <span class="o">%</span><span class="n">filtr</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">sp</span> <span class="o">=</span> <span class="n">PositionExtractor</span><span class="p">()</span> <span class="c1">#make a utils file so don&#39;t have to use a whole class for a simple function</span>
+                <span class="n">sp</span><span class="o">.</span><span class="n">run_uvotimsum</span><span class="p">(</span><span class="n">extfile</span><span class="p">,</span><span class="n">combfile</span><span class="p">)</span>
+                <span class="n">filepaths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">combfile</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">filepaths</span></div>
+
+
+
+<div class="viewcode-block" id="MakeSED.runFappend"><a class="viewcode-back" href="../uvot_sed.html#uvot_sed.MakeSED.runFappend">[docs]</a>    <span class="k">def</span> <span class="nf">runFappend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">inputFile</span><span class="p">,</span><span class="n">mergedFile</span><span class="p">):</span>
+        <span class="c1">#print &#39;appending %s to %s&#39; %(inputFile,mergedFile)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;fappend&quot;</span><span class="p">,</span><span class="n">inputFile</span><span class="p">,</span><span class="n">mergedFile</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Karlen Shahinyan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.7',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

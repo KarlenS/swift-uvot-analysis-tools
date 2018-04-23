@@ -1,3 +1,5 @@
+#!/local/gammasoft/anaconda2/bin/python
+
 '''
 This is the main module for an automated Swift-UVOT analysis.
 
@@ -17,6 +19,7 @@ import argparse
 
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+from astropy.time import Time
 
 
 class uvot_runner(object):
@@ -86,13 +89,13 @@ class uvot_runner(object):
         self.bkg_coords = iv.prime_bkg() 
 
 
-    def uvot_detecter(self):
+    def uvot_detecter(self,default_fs = True):
         '''Wrapper for running ``UVOTDETECT`` on all requested observations and extracting position information.
         '''
 
         from source_position import PositionExtractor
 
-        pos = PositionExtractor()
+        pos = PositionExtractor(default_fs = default_fs)
 
         pos.source_coords = self.source_coords
         pos.bkg_coords = self.bkg_coords
@@ -125,7 +128,7 @@ class uvot_runner(object):
             x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
 
 
-    def uvot_measurer(self,measure=True):
+    def uvot_measurer(self,measure=True,default_fs = True):
         '''Wrapper for running ``UVOTDETECT`` and extracting photometry information from all requested observations.
 
         Args:
@@ -158,7 +161,7 @@ class uvot_runner(object):
     
         #run through all image files to perform and/or extract photometry
         for filepath in self.filepaths:
-            measurer = MeasureSource(filepath)
+            measurer = MeasureSource(filepath,default_fs = default_fs)
             measurer.source_coords = self.source_coords
 
             if measure:
@@ -171,6 +174,21 @@ class uvot_runner(object):
         return ptab.group_by('filter')
         
 
+    def uvot_sed_maker(self,startdate,enddate):
+        from uvot_sed import MakeSED
+
+        #preparing files
+        sed = MakeSED(self.filepaths)
+        sortedpaths = sed.sortFilelistByFilter()
+        sed.sortedpaths = sortedpaths
+        self.filepaths = sed.combineFits(startdate,enddate)
+
+        self.uvot_primer()
+        self.uvot_detecter(default_fs = False)
+        photometry = self.uvot_measurer(default_fs = False)
+        photometry.write('3C66A_%s-%s_seds.fits'%(startdate.mjd,enddate.mjd),overwrite=True)
+
+
 def main():
 
     parser = argparse.ArgumentParser(description='Quick verification of image quality and regions selection for UVOT analysis.')
@@ -181,10 +199,12 @@ def main():
     parser.add_argument('-c',default=None,help='Specify coordinates for the source of interest.')
     parser.add_argument('-s',default=None,help='Specify the name for the source of interest. Ignored if -c is specified.')
     parser.add_argument('-ebv',default=None,help='User-specified E(B-V) value. Will query IRSA database, if not specified.')
+    parser.add_argument('-date_range',default='1990-01-01,2020-01-01',help='Comma-separated beginning and end of date(time) range to average images for SED construction. Format is somewhat flexible, but try \'YYYY-MM-DD HH:MM,YYYY-MM-DD HH:MM\'')
     parser.add_argument('--check',action='store_true',default=False,help='View all images with the source marked to check observation quality.')
     parser.add_argument('--detect',action='store_true',default=False,help='Run UVOTDETECT on all images.')
     parser.add_argument('--measure',action='store_true',default=False,help='Run UVOTSOURCE on all images to get photometry.')
     parser.add_argument('--extract_only',action='store_true',default=False,help='Extract photometry information from existing UVOTSOURCE output files, without rerunning UVOTSOURCE.')
+    parser.add_argument('--sed',action='store_true',default=False,help='Extract source SED by combining all observations/images located in the path (specified with -p) and falling within the date range (specified by -date_range)')
     args = parser.parse_args()
 
     #use all observations in the provided directory unless a specific obs is requested
@@ -204,8 +224,11 @@ def main():
             raise NameError('%s does not exist.' %obspath)
 
     #raise an error if an operation is not selected.
-    if not ( args.measure or args.check or  args.detect or  args.extract_only ):
+    if not ( args.measure or args.check or  args.detect or  args.extract_only or args.sed ):
         raise parser.error('Nothing to do. Use --detect, --check, --measure, or --extract_only flags for desired operations or -h for help.')
+
+    if args.sed and args.date_range == '1990-01-01,2020-01-01':
+        print 'Option -date_range not specified. Will use all provided observations for SED.'
 
 
     #run all the wrappers, though unless --detect --check or --measure are given, nothing will happen!
@@ -242,6 +265,18 @@ def main():
         photometry = runner.uvot_measurer(measure = not args.extract_only)
         #photometry.write('OJ287_uvot_photometry_wExtCorr.dat',format='ascii.commented_header')
         photometry.write(args.o,overwrite=True)
+
+    if args.sed:
+        start,end = args.date_range.split(',')
+        try:
+            runner.uvot_sed_maker(Time(start.lstrip()),Time(end.lstrip()))
+        except ValueError:
+            if start.lstrip().isdigit() and start.lstrip().isdigit():
+                runner.uvot_sed_maker(Time(np.float(start.lstrip()),format='mjd'),Time(np.float(end.lstrip()),format='mjd'))
+            else:
+                raise ValueError('Invalid date_range format. Try providing dates in MJD or ISO formats.')
+
+
 
 
 if __name__ == '__main__':

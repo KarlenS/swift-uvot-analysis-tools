@@ -147,27 +147,15 @@ which is not currently included in these wrappers.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="check_images.SourceImageViewer.source_ra">
-<code class="descname">source_ra</code><a class="headerlink" href="#check_images.SourceImageViewer.source_ra" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; RA coordinate of source of interest</p>
+<dt id="check_images.SourceImageViewer.source_coords">
+<code class="descname">source_coords</code><a class="headerlink" href="#check_images.SourceImageViewer.source_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a> &#8211; Coordinates of the source</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="check_images.SourceImageViewer.source_dec">
-<code class="descname">source_dec</code><a class="headerlink" href="#check_images.SourceImageViewer.source_dec" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Dec coordinate of source of interest</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="check_images.SourceImageViewer.bkg_ra">
-<code class="descname">bkg_ra</code><a class="headerlink" href="#check_images.SourceImageViewer.bkg_ra" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; RA coordinate of background region center</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="check_images.SourceImageViewer.bkg_dec">
-<code class="descname">bkg_dec</code><a class="headerlink" href="#check_images.SourceImageViewer.bkg_dec" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Dec coordinate of background region center</p>
+<dt id="check_images.SourceImageViewer.bkg_coords">
+<code class="descname">bkg_coords</code><a class="headerlink" href="#check_images.SourceImageViewer.bkg_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a> &#8211; Coordinate of background region center</p>
 </dd></dl>
 
 <dl class="method">
@@ -184,7 +172,7 @@ which is not currently included in these wrappers.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; radius of the background region</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.6)"><em>float</em></a>) &#8211; radius of the background region</td>
 </tr>
 </tbody>
 </table>
@@ -198,7 +186,7 @@ which is not currently included in these wrappers.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; radius of the source region</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.6)"><em>float</em></a>) &#8211; radius of the source region</td>
 </tr>
 </tbody>
 </table>
@@ -251,7 +239,7 @@ will be assessed.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">background region center RA and Dec coordinates</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a></td>
 </tr>
 </tbody>
 </table>
@@ -270,7 +258,7 @@ will be drawn at the clicked position and the user&#8217;s happiness level will 
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">source region center RA and Dec coordinates</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a></td>
 </tr>
 </tbody>
 </table>

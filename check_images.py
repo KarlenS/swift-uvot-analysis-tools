@@ -1,3 +1,5 @@
+#!/local/gammasoft/anaconda2/bin/python
+
 '''
 Module for visually inspecting and interacting with UVOT images using DS9, including selection of DS9 regions for aperture photometry.
 '''

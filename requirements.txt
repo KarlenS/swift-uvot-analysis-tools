@@ -2,3 +2,4 @@ pyds9
 astropy
 pyregion
 astroquery
+tqdm

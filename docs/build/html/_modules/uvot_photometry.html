@@ -128,10 +128,13 @@
            <div itemprop="articleBody">
             
   <h1>Source code for uvot_photometry</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span></span><span class="ch">#!/local/gammasoft/anaconda2/bin/python</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">Use ``UVOTSOURCE`` to get aperture photometry from UVOT images.</span>
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">path</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 
 <span class="kn">from</span> <span class="nn">astropy.time</span> <span class="k">import</span> <span class="n">Time</span>
@@ -142,21 +145,75 @@
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        filepath (str): path of fits image to input into ``UVOTSOURCE`` </span>
+<span class="sd">        source_coords (`astropy.coordinates.SkyCoord`_): coordinates of the source</span>
 <span class="sd">        dirpath (str): directory containing ``filepath``</span>
 <span class="sd">        obs (str): observation ID parsed from ``filepath``</span>
 <span class="sd">        band (str): observation band parsed from ``filepath``</span>
+
+<span class="sd">    .. _astropy.coordinates.SkyCoord:</span>
+<span class="sd">        http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">default_fs</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="kc">None</span>
         
         <span class="c1">#parse filename, directory name, obs ID, and band from filepath</span>
         <span class="n">dirpath</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
-        <span class="n">base</span><span class="p">,</span><span class="n">extn</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dirpath</span> <span class="o">=</span> <span class="n">dirpath</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">default_fs</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span><span class="n">extn</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">23</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+
+<div class="viewcode-block" id="MeasureSource.correct_extinction"><a class="viewcode-back" href="../uvot_photometry.html#uvot_photometry.MeasureSource.correct_extinction">[docs]</a>    <span class="k">def</span> <span class="nf">correct_extinction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">filtr</span><span class="p">,</span> <span class="n">EBminV</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    
+        <span class="sd">&#39;&#39;&#39;Function to correct for Galactic extinction using values from IRSA</span>
+<span class="sd">    </span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            Central wavelengths for UVOT filters are taken from `Poole et al. (2008)`_.               </span>
+<span class="sd">            :math:`R_{\lambda}` values are derived using the `York Extinction Solver`_.</span>
+<span class="sd">    </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            val (float): flux or mag requiring extinction correction (flux is assumed, unless ``mag = True``)</span>
+<span class="sd">            filtr (str): UVOT filter name (vv, uu, bb, w1, m2, w2)</span>
+<span class="sd">            source_coords (`astropy.coordinates.SkyCoord`_): Source position to be used for querying the amount of extinction</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Extinction-corrected flux (erg/s/cm2) or magnitude (mag)</span>
+<span class="sd">    </span>
+<span class="sd">        .. _astropy.coordinates.SkyCoord:</span>
+<span class="sd">            http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord</span>
+<span class="sd">        .. _Poole et al. (2008):</span>
+<span class="sd">            http://adsabs.harvard.edu/abs/2008MNRAS.383..627P</span>
+<span class="sd">        .. _York Extinction Solver: </span>
+<span class="sd">            http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+    
+        <span class="n">central_wav</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uu&#39;</span><span class="p">:</span><span class="mf">3465.</span><span class="p">,</span><span class="s1">&#39;w1&#39;</span><span class="p">:</span><span class="mf">2600.</span><span class="p">,</span><span class="s1">&#39;m2&#39;</span><span class="p">:</span><span class="mf">2246.</span><span class="p">,</span><span class="s1">&#39;w2&#39;</span><span class="p">:</span><span class="mf">1928.</span><span class="p">,</span><span class="s1">&#39;bb&#39;</span><span class="p">:</span><span class="mf">4392.</span><span class="p">,</span><span class="s1">&#39;vv&#39;</span><span class="p">:</span><span class="mf">5468.</span><span class="p">}</span>
+        <span class="n">R_lambda</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uu&#39;</span><span class="p">:</span><span class="mf">4.89172</span><span class="p">,</span><span class="s1">&#39;w1&#39;</span><span class="p">:</span><span class="mf">6.55663</span><span class="p">,</span><span class="s1">&#39;m2&#39;</span><span class="p">:</span><span class="mf">9.15389</span><span class="p">,</span><span class="s1">&#39;w2&#39;</span><span class="p">:</span><span class="mf">8.10997</span><span class="p">,</span><span class="s1">&#39;bb&#39;</span><span class="p">:</span><span class="mf">4.00555</span><span class="p">,</span><span class="s1">&#39;vv&#39;</span><span class="p">:</span><span class="mf">2.99692</span><span class="p">}</span>
+    
+    
+        <span class="c1">#query for the E(B-V) value, unless user specifies one</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">EBminV</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">astroquery.irsa_dust</span> <span class="k">import</span> <span class="n">IrsaDust</span>
+            <span class="n">extTable</span> <span class="o">=</span> <span class="n">IrsaDust</span><span class="o">.</span><span class="n">get_extinction_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span><span class="p">)</span>
+            <span class="n">EBminV</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">extTable</span><span class="p">[</span><span class="s1">&#39;A_SandF&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">extTable</span><span class="p">[</span><span class="s1">&#39;A_over_E_B_V_SandF&#39;</span><span class="p">])</span>
+    
+        <span class="c1">#calculate extinction magnitude</span>
+        <span class="n">A_lambda</span> <span class="o">=</span> <span class="n">R_lambda</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="n">EBminV</span>
+    
+        <span class="k">if</span> <span class="n">mag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span> <span class="o">-</span> <span class="n">R_lambda</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="n">EBminV</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span><span class="o">*</span><span class="n">central_wav</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">R_lambda</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="n">EBminV</span><span class="o">/</span><span class="mf">2.5</span><span class="p">)</span></div>
+    
 
 <div class="viewcode-block" id="MeasureSource.run_uvotsource"><a class="viewcode-back" href="../uvot_photometry.html#uvot_photometry.MeasureSource.run_uvotsource">[docs]</a>    <span class="k">def</span> <span class="nf">run_uvotsource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Wrapper to run the ``UVOTSOURCE`` tool for extracting photometry. The input/output file information</span>
@@ -188,9 +245,20 @@
         <span class="n">mainfits</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
         <span class="n">obs_start</span> <span class="o">=</span> <span class="n">Time</span><span class="p">(</span><span class="n">mainfits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;DATE-OBS&#39;</span><span class="p">],</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;isot&#39;</span><span class="p">)</span>
         <span class="n">obs_end</span> <span class="o">=</span> <span class="n">Time</span><span class="p">(</span><span class="n">mainfits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;DATE-END&#39;</span><span class="p">],</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;isot&#39;</span><span class="p">)</span>
+
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mainfits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;ASPCORR&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;DIRECT&#39;</span><span class="p">:</span>
+                <span class="n">aspflag</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">aspflag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s1">&#39;Assuming apsflag is fine for </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span>
+            <span class="n">aspflag</span> <span class="o">=</span> <span class="kc">True</span>
+
         <span class="n">mainfits</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">obs_start</span> <span class="o">+</span> <span class="p">(</span><span class="n">obs_end</span> <span class="o">-</span> <span class="n">obs_start</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span></div>
+        <span class="k">return</span> <span class="n">obs_start</span> <span class="o">+</span> <span class="p">(</span><span class="n">obs_end</span> <span class="o">-</span> <span class="n">obs_start</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">aspflag</span> </div>
 
 <div class="viewcode-block" id="MeasureSource.get_observation_data"><a class="viewcode-back" href="../uvot_photometry.html#uvot_photometry.MeasureSource.get_observation_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_observation_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Parse the output of ``UVOTSOURCE`` to extract essential photometry information.</span>
@@ -214,14 +282,18 @@
                 <span class="k">return</span> <span class="kc">None</span>
 
 
-        <span class="n">obstime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_observation_time</span><span class="p">()</span>
+        <span class="n">obstime</span><span class="p">,</span><span class="n">corrflg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_observation_time</span><span class="p">()</span>
         <span class="n">mag</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;MAG&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">magerr</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;MAG_ERR&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">flux</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;FLUX_AA&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">fluxerr</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;FLUX_AA_ERR&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">fluxj</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;FLUX_HZ&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">fluxjerr</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;FLUX_HZ_ERR&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">band</span><span class="p">,</span><span class="n">obstime</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">mag</span><span class="p">,</span><span class="n">magerr</span><span class="p">,</span><span class="n">flux</span><span class="p">,</span><span class="n">fluxerr</span><span class="p">,</span><span class="n">fluxj</span><span class="p">,</span><span class="n">fluxjerr</span><span class="p">]</span></div></div>
+        <span class="n">fluxextcorr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correct_extinction</span><span class="p">(</span><span class="n">fluxj</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">band</span><span class="p">)</span>
+        <span class="n">fluxextcorrerr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">correct_extinction</span><span class="p">(</span><span class="n">fluxjerr</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">band</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">band</span><span class="p">,</span><span class="n">obstime</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">mag</span><span class="p">,</span><span class="n">magerr</span><span class="p">,</span><span class="n">flux</span><span class="p">,</span><span class="n">fluxerr</span><span class="p">,</span><span class="n">fluxj</span><span class="p">,</span><span class="n">fluxjerr</span><span class="p">,</span><span class="n">fluxextcorr</span><span class="p">,</span><span class="n">fluxextcorrerr</span><span class="p">]</span></div></div>
+
+
 </pre></div>
 
            </div>

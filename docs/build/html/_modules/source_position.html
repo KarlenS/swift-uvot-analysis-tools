@@ -128,7 +128,9 @@
            <div itemprop="articleBody">
             
   <h1>Source code for source_position</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span></span><span class="ch">#!/local/gammasoft/anaconda2/bin/python</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">Module for determining the source position using ``UVOTDETECT`` and for generating source and background region files used in the photometry.</span>
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -146,25 +148,26 @@
     <span class="sd">&#39;&#39;&#39;Class to handle position-related requests for the UVOT analysis chain, including running ``UVOTDETECT`` and parsing its results.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        source_ra (float): right ascension coordinate of source</span>
-<span class="sd">        source_dec (float): declination coordinate of source</span>
-<span class="sd">        bkg_ra (float): right ascension coordinate of background region center</span>
-<span class="sd">        bkg_dec (float): declination coordinate of background region center</span>
+<span class="sd">        source_coords (`astropy.coordinates.SkyCoord`_): coordinate of the source</span>
+<span class="sd">        bkg_coords (`astropy.coordinates.SkyCoord`_): coordinate of the background region center</span>
 <span class="sd">        filepath (str): path of image file used for analysis</span>
 <span class="sd">        detect (str): path of ``UVOTDETECT`` output file</span>
 <span class="sd">        regfile (str): path of source region file</span>
 <span class="sd">        bkgregfile (str): path of background region file</span>
+
+<span class="sd">    .. _astropy.coordinates.SkyCoord:</span>
+<span class="sd">        http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord</span>
+
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="kc">None</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="kc">None</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">default_fs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_coords</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">detect</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">regfile</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_fs</span> <span class="o">=</span> <span class="n">default_fs</span>
 
 <div class="viewcode-block" id="PositionExtractor.cleanup"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor.cleanup">[docs]</a>    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Cleans up ``UVOTDETECT`` output files after necessary information has been extracted from them.</span>
@@ -182,14 +185,14 @@
         <span class="n">dirpath</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
 
         <span class="c1"># write source region file</span>
-        <span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;fk5;circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,5&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span><span class="p">)</span>
+        <span class="n">region</span> <span class="o">=</span> <span class="s1">&#39;fk5;circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,5&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">value</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="n">regfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regfile</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
         <span class="n">regfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
         <span class="n">regfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
         <span class="c1"># write background region file if it doesn&#39;t already exist </span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span><span class="p">):</span>
-            <span class="n">bkgregion</span> <span class="o">=</span> <span class="s1">&#39;fk5;circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,20&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span><span class="p">)</span>
+            <span class="n">bkgregion</span> <span class="o">=</span> <span class="s1">&#39;fk5;circle(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,20&quot;)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_coords</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">value</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bkg_coords</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
             <span class="n">bkgregfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
             <span class="n">bkgregfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">bkgregion</span><span class="p">)</span>
             <span class="n">bkgregfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -206,14 +209,12 @@
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="c1"># using  subprocess to run uvotimsum</span>
-        <span class="n">tmp</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;uvotimsum&quot;</span><span class="p">,</span><span class="n">inputFile</span><span class="p">,</span><span class="n">outputFile</span><span class="p">,</span><span class="s1">&#39;chatter=0&#39;</span><span class="p">,</span><span class="s1">&#39;clobber=no&#39;</span><span class="p">,</span><span class="s1">&#39;exclude=NONE&#39;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;uvotimsum&quot;</span><span class="p">,</span><span class="n">inputFile</span><span class="p">,</span><span class="n">outputFile</span><span class="p">,</span><span class="s1">&#39;chatter=0&#39;</span><span class="p">,</span><span class="s1">&#39;clobber=yes&#39;</span><span class="p">,</span><span class="s1">&#39;exclude=NONE&#39;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="PositionExtractor.getNearestSource"><a class="viewcode-back" href="../source_position.html#source_position.PositionExtractor.getNearestSource">[docs]</a>    <span class="k">def</span> <span class="nf">getNearestSource</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Uses the results of ``UVOTDETECT`` to get the refined source position per image. If this is unsuccessful, the default coordinates provided to the class are used. Once this is sorted out, the function orders the region file creation.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-
-        <span class="n">c</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span><span class="p">),</span><span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">hourangle</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect</span><span class="p">)</span>
@@ -235,18 +236,17 @@
                 <span class="nb">print</span> <span class="s1">&#39;Combining and rerunning seems to have worked!&#39;</span>
 
             <span class="k">except</span><span class="p">:</span>
-                <span class="nb">print</span> <span class="s1">&#39;Attempt to combine extensions failed. Defaulting to SIMBAD position.&#39;</span>
+                <span class="nb">print</span> <span class="s1">&#39;Attempt to combine extensions failed. Defaulting to NED/SIMBAD position.&#39;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">createRegionFiles</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># finds the nearest source in UVOTDETECT to default coordinates, and updates coordinate attributes</span>
-            <span class="n">source_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">c</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;DEC&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">c</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">source_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;DEC&#39;</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
             <span class="n">c_detect</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;RA&#39;</span><span class="p">],</span><span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;DEC&#39;</span><span class="p">],</span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;deg&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;RA&#39;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;DEC&#39;</span><span class="p">]</span>
 
             <span class="c1"># only accept the nearest source if it is within about 2 arcseconds of the default position and order creation of region files</span>
-            <span class="k">if</span> <span class="n">c_detect</span><span class="o">.</span><span class="n">separation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mf">6.E-4</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c_detect</span><span class="o">.</span><span class="n">separation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mf">6.E-4</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;RA&#39;</span><span class="p">],</span><span class="n">data</span><span class="p">[</span><span class="n">source_ind</span><span class="p">][</span><span class="s1">&#39;DEC&#39;</span><span class="p">]),</span><span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">createRegionFiles</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span> <span class="s1">&#39;Nearest source too far away (more than 2 arcsecs)! Defaulting to SIMBAD coords.&#39;</span>
@@ -263,12 +263,20 @@
 <span class="sd">            exp (str): name of exposure file, assumed to be in the same directory as the primary image.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">dirpath</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
-        <span class="n">base</span><span class="p">,</span><span class="n">extn</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
-        <span class="n">obs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
-        <span class="n">band</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        
+
+        <span class="c1">#this is terrible - streamline it more</span>
+        <span class="n">expfile</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_fs</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span><span class="n">extn</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">obs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">band</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">expfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_ex.img.gz&#39;</span> <span class="o">%</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">obs</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">23</span><span class="p">]</span>
+            <span class="n">band</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
 
         <span class="c1"># optional usage of exposure files</span>
-        <span class="n">expfile</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_ex.img.gz&#39;</span> <span class="o">%</span><span class="n">base</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">expfile</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">exp</span><span class="p">:</span>
             <span class="n">expfile</span><span class="o">=</span><span class="s1">&#39;NONE&#39;</span>
 
@@ -283,7 +291,9 @@
         <span class="c1"># sets filename attributes for region files and UVOTDETECT output filename</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">detect</span> <span class="o">=</span> <span class="n">outfile</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">regfile</span> <span class="o">=</span> <span class="n">regfile</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span> <span class="o">=</span> <span class="n">bkgregfile</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkgregfile</span> <span class="o">=</span> <span class="n">bkgregfile</span>
+
+        <span class="k">return</span> <span class="n">tmp</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span></div></div>
 </pre></div>
 
            </div>

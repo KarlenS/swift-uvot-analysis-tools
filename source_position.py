@@ -1,3 +1,5 @@
+#!/local/gammasoft/anaconda2/bin/python
+
 '''
 Module for determining the source position using ``UVOTDETECT`` and for generating source and background region files used in the photometry.
 '''
@@ -28,13 +30,14 @@ class PositionExtractor(object):
 
     '''
 
-    def __init__(self):
+    def __init__(self,default_fs=True):
         self.source_coords = None
         self.bkg_coords = None
         self.filepath = None
         self.detect = None
         self.regfile = None
         self.bkgregfile = None
+        self.default_fs = default_fs
 
     def cleanup(self):
         '''Cleans up ``UVOTDETECT`` output files after necessary information has been extracted from them.
@@ -76,7 +79,7 @@ class PositionExtractor(object):
         '''
 
         # using  subprocess to run uvotimsum
-        tmp = subprocess.Popen(["uvotimsum",inputFile,outputFile,'chatter=0','clobber=no','exclude=NONE'], stdout=subprocess.PIPE)
+        tmp = subprocess.Popen(["uvotimsum",inputFile,outputFile,'chatter=0','clobber=yes','exclude=NONE'], stdout=subprocess.PIPE)
         tmp = tmp.communicate()
 
     def getNearestSource(self):
@@ -130,12 +133,20 @@ class PositionExtractor(object):
             exp (str): name of exposure file, assumed to be in the same directory as the primary image.
         '''
         dirpath,filename = path.split(self.filepath)
-        base,extn = filename.split('_')
-        obs = base[2:-3]
-        band = base[-2:]
+        
+
+        #this is terrible - streamline it more
+        expfile = ''
+        if self.default_fs:
+            base,extn = filename.split('_')
+            obs = base[2:-3]
+            band = base[-2:]
+            expfile = path.join(dirpath,'%s_ex.img.gz' %base)
+        else:
+            obs = filename[8:23]
+            band = filename[5:7]
 
         # optional usage of exposure files
-        expfile = path.join(dirpath,'%s_ex.img.gz' %base)
         if not path.isfile(expfile) or not exp:
             expfile='NONE'
 

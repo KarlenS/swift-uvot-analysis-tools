@@ -134,31 +134,19 @@
 <p>Module for determining the source position using <code class="docutils literal"><span class="pre">UVOTDETECT</span></code> and for generating source and background region files used in the photometry.</p>
 <dl class="class">
 <dt id="source_position.PositionExtractor">
-<em class="property">class </em><code class="descclassname">source_position.</code><code class="descname">PositionExtractor</code><a class="reference internal" href="_modules/source_position.html#PositionExtractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source_position.PositionExtractor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="descclassname">source_position.</code><code class="descname">PositionExtractor</code><span class="sig-paren">(</span><em>default_fs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source_position.html#PositionExtractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source_position.PositionExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Class to handle position-related requests for the UVOT analysis chain, including running <code class="docutils literal"><span class="pre">UVOTDETECT</span></code> and parsing its results.</p>
 <dl class="attribute">
-<dt id="source_position.PositionExtractor.source_ra">
-<code class="descname">source_ra</code><a class="headerlink" href="#source_position.PositionExtractor.source_ra" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; right ascension coordinate of source</p>
+<dt id="source_position.PositionExtractor.source_coords">
+<code class="descname">source_coords</code><a class="headerlink" href="#source_position.PositionExtractor.source_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a> &#8211; coordinate of the source</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="source_position.PositionExtractor.source_dec">
-<code class="descname">source_dec</code><a class="headerlink" href="#source_position.PositionExtractor.source_dec" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; declination coordinate of source</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="source_position.PositionExtractor.bkg_ra">
-<code class="descname">bkg_ra</code><a class="headerlink" href="#source_position.PositionExtractor.bkg_ra" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; right ascension coordinate of background region center</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="source_position.PositionExtractor.bkg_dec">
-<code class="descname">bkg_dec</code><a class="headerlink" href="#source_position.PositionExtractor.bkg_dec" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; declination coordinate of background region center</p>
+<dt id="source_position.PositionExtractor.bkg_coords">
+<code class="descname">bkg_coords</code><a class="headerlink" href="#source_position.PositionExtractor.bkg_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a> &#8211; coordinate of the background region center</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -211,7 +199,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>exp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of exposure file, assumed to be in the same directory as the primary image.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>exp</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) &#8211; name of exposure file, assumed to be in the same directory as the primary image.</td>
 </tr>
 </tbody>
 </table>
@@ -226,8 +214,8 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>inputFile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of the input file for <code class="docutils literal"><span class="pre">UVOTIMSUM</span></code></li>
-<li><strong>outputFile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of the output file for <code class="docutils literal"><span class="pre">UVOTIMSUM</span></code></li>
+<li><strong>inputFile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) &#8211; name of the input file for <code class="docutils literal"><span class="pre">UVOTIMSUM</span></code></li>
+<li><strong>outputFile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) &#8211; name of the output file for <code class="docutils literal"><span class="pre">UVOTIMSUM</span></code></li>
 </ul>
 </td>
 </tr>

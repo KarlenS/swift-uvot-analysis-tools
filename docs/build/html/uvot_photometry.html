@@ -134,13 +134,19 @@
 <p>Use <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> to get aperture photometry from UVOT images.</p>
 <dl class="class">
 <dt id="uvot_photometry.MeasureSource">
-<em class="property">class </em><code class="descclassname">uvot_photometry.</code><code class="descname">MeasureSource</code><span class="sig-paren">(</span><em>filepath=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<em class="property">class </em><code class="descclassname">uvot_photometry.</code><code class="descname">MeasureSource</code><span class="sig-paren">(</span><em>filepath=''</em>, <em>default_fs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Class to measure photometry on UVOT data using the <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> tool and to parse the results.</p>
 <dl class="attribute">
 <dt id="uvot_photometry.MeasureSource.filepath">
 <code class="descname">filepath</code><a class="headerlink" href="#uvot_photometry.MeasureSource.filepath" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> &#8211; path of fits image to input into <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="uvot_photometry.MeasureSource.source_coords">
+<code class="descname">source_coords</code><a class="headerlink" href="#uvot_photometry.MeasureSource.source_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a> &#8211; coordinates of the source</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -162,6 +168,36 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="uvot_photometry.MeasureSource.correct_extinction">
+<code class="descname">correct_extinction</code><span class="sig-paren">(</span><em>val</em>, <em>filtr</em>, <em>EBminV=None</em>, <em>mag=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource.correct_extinction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource.correct_extinction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to correct for Galactic extinction using values from IRSA</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Central wavelengths for UVOT filters are taken from <a class="reference external" href="http://adsabs.harvard.edu/abs/2008MNRAS.383..627P">Poole et al. (2008)</a>.
+<span class="math">\(R_{\lambda}\)</span> values are derived using the <a class="reference external" href="http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi">York Extinction Solver</a>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>val</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.6)"><em>float</em></a>) &#8211; flux or mag requiring extinction correction (flux is assumed, unless <code class="docutils literal"><span class="pre">mag</span> <span class="pre">=</span> <span class="pre">True</span></code>)</li>
+<li><strong>filtr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) &#8211; UVOT filter name (vv, uu, bb, w1, m2, w2)</li>
+<li><strong>source_coords</strong> (<a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a>) &#8211; Source position to be used for querying the amount of extinction</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Extinction-corrected flux (erg/s/cm2) or magnitude (mag)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.6)">float</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="uvot_photometry.MeasureSource.get_observation_data">
 <code class="descname">get_observation_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/uvot_photometry.html#MeasureSource.get_observation_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#uvot_photometry.MeasureSource.get_observation_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse the output of <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code> to extract essential photometry information.</p>
@@ -171,7 +207,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">observing band, observing time (MJD), magnitude and 1$sigma$ error in UVOT system, flux and 1$sigma$ error in erg/s/cm$^{2}$/$AA$, flux and 1$sigma$ error in milliJanskies</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a></td>
 </tr>
 </tbody>
 </table>
@@ -187,7 +223,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the middle of the observation time in ISOt format</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.6)">float</a></td>
 </tr>
 </tbody>
 </table>
@@ -208,7 +244,7 @@ is taken from the class attributes, which are obtained by parsing the provided <
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">2 elements corresponding to the output and error messages from <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a></td>
 </tr>
 </tbody>
 </table>

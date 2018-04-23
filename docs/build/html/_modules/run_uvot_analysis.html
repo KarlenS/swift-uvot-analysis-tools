@@ -128,68 +128,28 @@
            <div itemprop="articleBody">
             
   <h1>Source code for run_uvot_analysis</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span></span><span class="ch">#!/local/gammasoft/anaconda2/bin/python</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">This is the main module for an automated Swift-UVOT analysis.</span>
 
 <span class="sd">The process consists of three primary steps:</span>
 <span class="sd">    * Run ``UVOTDETECT`` to get a proper centroid for the source for each observation, and generate region files for source and background regions,</span>
 <span class="sd">    * Visually check images for potential issues/artifacts (and manually reject observations),</span>
 <span class="sd">    * Run ``UVOTSOURCE`` to obtain photometry and parse data for light curve and SED use.</span>
+
+<span class="sd">    TODO:</span>
+<span class="sd">        Add automatic data downloading (possibly with astroquery.heasarc)</span>
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 
-<div class="viewcode-block" id="correct_extinction"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.correct_extinction">[docs]</a><span class="k">def</span> <span class="nf">correct_extinction</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">filtr</span><span class="p">,</span> <span class="n">source_coords</span><span class="p">,</span> <span class="n">EBminV</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-
-    <span class="sd">&#39;&#39;&#39;Function to correct for Galactic extinction using values from IRSA</span>
-
-<span class="sd">    </span>
-<span class="sd">    Note:</span>
-<span class="sd">        Central wavelengths for UVOT filters are taken from `Poole et al. (2008)`_.               </span>
-<span class="sd">        :math:`R_{\lambda}` values are derived using the `York Extinction Solver`_.</span>
-
-<span class="sd">    </span>
-<span class="sd">    Args:</span>
-<span class="sd">        val (float): flux or mag requiring extinction correction (flux is assumed, unless ``mag = True``)</span>
-<span class="sd">        filtr (str): UVOT filter name (vv, uu, bb, w1, m2, w2)</span>
-<span class="sd">        source_coords (`astropy.coordinates.SkyCoord`_): Source position to be used for querying the amount of extinction</span>
-<span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">        float: Extinction-corrected flux (erg/s/cm2) or magnitude (mag)</span>
-
-<span class="sd">    .. _astropy.coordinates.SkyCoord:</span>
-<span class="sd">        http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord</span>
-<span class="sd">    .. _Poole et al. (2008):</span>
-<span class="sd">        http://adsabs.harvard.edu/abs/2008MNRAS.383..627P</span>
-<span class="sd">    .. _York Extinction Solver: </span>
-<span class="sd">        http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi        </span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="n">central_wav</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uu&#39;</span><span class="p">:</span><span class="mf">3465.</span><span class="p">,</span><span class="s1">&#39;w1&#39;</span><span class="p">:</span><span class="mf">2600.</span><span class="p">,</span><span class="s1">&#39;m2&#39;</span><span class="p">:</span><span class="mf">2246.</span><span class="p">,</span><span class="s1">&#39;w2&#39;</span><span class="p">:</span><span class="mf">1928.</span><span class="p">,</span><span class="s1">&#39;bb&#39;</span><span class="p">:</span><span class="mf">4392.</span><span class="p">,</span><span class="s1">&#39;vv&#39;</span><span class="p">:</span><span class="mf">5468.</span><span class="p">}</span>
-    <span class="n">R_lambda</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uu&#39;</span><span class="p">:</span><span class="mf">4.89172</span><span class="p">,</span><span class="s1">&#39;w1&#39;</span><span class="p">:</span><span class="mf">6.55663</span><span class="p">,</span><span class="s1">&#39;m2&#39;</span><span class="p">:</span><span class="mf">9.15389</span><span class="p">,</span><span class="s1">&#39;w2&#39;</span><span class="p">:</span><span class="mf">8.10997</span><span class="p">,</span><span class="s1">&#39;bb&#39;</span><span class="p">:</span><span class="mf">4.00555</span><span class="p">,</span><span class="s1">&#39;vv&#39;</span><span class="p">:</span><span class="mf">2.99692</span><span class="p">}</span>
-
-
-    <span class="c1">#query for the E(B-V) value, unless user specifies one</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">EBminV</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">astroquery.irsa_dust</span> <span class="k">import</span> <span class="n">IrsaDust</span>
-        <span class="n">extTable</span> <span class="o">=</span> <span class="n">IrsaDust</span><span class="o">.</span><span class="n">get_extinction_table</span><span class="p">(</span><span class="n">source_coords</span><span class="p">)</span>
-        <span class="n">EBminV</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">extTable</span><span class="p">[</span><span class="s1">&#39;A_SandF&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;A_over_E_B_V_SandF&#39;</span><span class="p">])</span>
-    
-    <span class="c1">#calculate extinction magnitude</span>
-    <span class="n">A_lambda</span> <span class="o">=</span> <span class="n">R_lambda</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="n">EBminV</span>
-
-    <span class="k">if</span> <span class="n">mag</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">val</span> <span class="o">-</span> <span class="n">R_lambda</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="n">EBminV</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">val</span><span class="o">*</span><span class="n">central_wav</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">R_lambda</span><span class="p">[</span><span class="n">filtr</span><span class="p">]</span><span class="o">*</span><span class="n">EBminV</span><span class="o">/</span><span class="mf">2.5</span><span class="p">)</span></div>
-
-
-
-    
-
+<span class="kn">from</span> <span class="nn">astropy.coordinates</span> <span class="k">import</span> <span class="n">SkyCoord</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">astropy.time</span> <span class="k">import</span> <span class="n">Time</span>
 
 
 <div class="viewcode-block" id="uvot_runner"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.uvot_runner">[docs]</a><span class="k">class</span> <span class="nc">uvot_runner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -197,31 +157,36 @@
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        filepath (str): path of image file used for analysis</span>
-<span class="sd">        source_ra (float): right ascension coordinate of source</span>
-<span class="sd">        source_dec (float): declination coordinate of source</span>
-<span class="sd">        bkg_ra (float): right ascension coordinate of background region center</span>
-<span class="sd">        bkg_dec (float): declination coordinate of background region center</span>
+<span class="sd">        source_coords (`astropy.coordinates.SkyCoord`_): coordinates of the source</span>
+<span class="sd">        bkg_coords (`astropy.coordinates.SkyCoord`_): coordinates of the background region center</span>
 <span class="sd">        ebminv (float): E(B-V) value for the source.</span>
+
+<span class="sd">    .. _astropy.coordinates.SkyCoord:</span>
+<span class="sd">        http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_coords</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ebminv</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="uvot_runner.query_for_source_coords"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.uvot_runner.query_for_source_coords">[docs]</a>    <span class="k">def</span> <span class="nf">query_for_source_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_name</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Queries NED or SIMBAD databases for coordinates using a source name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source_name (str): source name to use for querying for coordinates </span>
+<span class="sd">        &#39;&#39;&#39;</span>
     
         <span class="kn">import</span> <span class="nn">astroquery</span>
         <span class="kn">from</span> <span class="nn">astroquery.ned</span> <span class="k">import</span> <span class="n">Ned</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">coords</span> <span class="o">=</span> <span class="n">Ned</span><span class="o">.</span><span class="n">query_object</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="s1">&#39;RA(deg)&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="s1">&#39;DEC(deg)&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;RA(deg)&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="s1">&#39;DEC(deg)&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span><span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
         <span class="k">except</span> <span class="n">astroquery</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RemoteServiceError</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">astroquery.simbad</span> <span class="k">import</span> <span class="n">Simbad</span>
             <span class="n">coords</span> <span class="o">=</span> <span class="n">Simbad</span><span class="o">.</span><span class="n">query_object</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="s1">&#39;DEC&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="s1">&#39;DEC&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span><span class="n">unit</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">hourangle</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">))</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">coords</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">astroquery</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RemoteServiceError</span><span class="p">(</span><span class="s1">&#39;Both NED and SIMBAD queries failed for the provided source name. Maybe try supplying coordinates or selecting the source position interactively.&#39;</span><span class="p">)</span></div>
     
@@ -239,35 +204,36 @@
 
         <span class="n">iv</span> <span class="o">=</span> <span class="n">SourceImageViewer</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">prime_source</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="n">iv</span><span class="o">.</span><span class="n">prime_source</span><span class="p">()</span>
-
-        <span class="n">iv</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span><span class="n">iv</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span>
         <span class="c1"># picking first optical filter image for user background selection,</span>
         <span class="c1"># or just the first image, if there aren&#39;t optical ones.</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">iv</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">filepath</span> <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">filepaths</span> <span class="k">if</span> <span class="s1">&#39;ubb&#39;</span> <span class="ow">in</span> <span class="n">filepath</span> <span class="ow">or</span> <span class="s1">&#39;uvv&#39;</span> <span class="ow">in</span> <span class="n">filepath</span><span class="p">)</span>
+            <span class="n">iv</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">filepath</span> <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span> <span class="k">if</span> <span class="s1">&#39;ubb&#39;</span> <span class="ow">in</span> <span class="n">filepath</span> <span class="ow">or</span> <span class="s1">&#39;uvv&#39;</span> <span class="ow">in</span> <span class="n">filepath</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">iv</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="n">iv</span><span class="o">.</span><span class="n">prime_bkg</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="n">prime_source</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="n">iv</span><span class="o">.</span><span class="n">prime_source</span><span class="p">()</span>
+
+        <span class="n">iv</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bkg_coords</span> <span class="o">=</span> <span class="n">iv</span><span class="o">.</span><span class="n">prime_bkg</span><span class="p">()</span> </div>
 
 
-<div class="viewcode-block" id="uvot_runner.uvot_detecter"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.uvot_runner.uvot_detecter">[docs]</a>    <span class="k">def</span> <span class="nf">uvot_detecter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="uvot_runner.uvot_detecter"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.uvot_runner.uvot_detecter">[docs]</a>    <span class="k">def</span> <span class="nf">uvot_detecter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">default_fs</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Wrapper for running ``UVOTDETECT`` on all requested observations and extracting position information.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="kn">from</span> <span class="nn">source_position</span> <span class="k">import</span> <span class="n">PositionExtractor</span>
 
-        <span class="n">pos</span> <span class="o">=</span> <span class="n">PositionExtractor</span><span class="p">()</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">PositionExtractor</span><span class="p">(</span><span class="n">default_fs</span> <span class="o">=</span> <span class="n">default_fs</span><span class="p">)</span>
 
-        <span class="n">pos</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span>
-        <span class="n">pos</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span>
+        <span class="n">pos</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span>
+        <span class="n">pos</span><span class="o">.</span><span class="n">bkg_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bkg_coords</span>
 
         <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span><span class="p">:</span>
             <span class="nb">print</span> <span class="s1">&#39;working on </span><span class="si">%s</span><span class="s1">...&#39;</span> <span class="o">%</span><span class="n">filepath</span> 
             <span class="n">pos</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
-            <span class="n">pos</span><span class="o">.</span><span class="n">run_uvotdetect</span><span class="p">()</span>
+            <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">run_uvotdetect</span><span class="p">()</span>
             <span class="n">pos</span><span class="o">.</span><span class="n">getNearestSource</span><span class="p">()</span>
             <span class="n">pos</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span></div>
 
@@ -283,17 +249,16 @@
         <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span><span class="p">:</span>
 
             <span class="n">iv</span> <span class="o">=</span> <span class="n">SourceImageViewer</span><span class="p">()</span>
+        
+            <span class="n">iv</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span>
+            <span class="n">iv</span><span class="o">.</span><span class="n">bkg_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bkg_coords</span>
 
             <span class="n">iv</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
-            <span class="n">iv</span><span class="o">.</span><span class="n">source_ra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_ra</span> 
-            <span class="n">iv</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_dec</span>
-            <span class="n">iv</span><span class="o">.</span><span class="n">bkg_ra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bkg_ra</span> 
-            <span class="n">iv</span><span class="o">.</span><span class="n">bkg_dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bkg_dec</span>
             <span class="n">iv</span><span class="o">.</span><span class="n">setup_frame</span><span class="p">()</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">raw_input</span><span class="p">(</span><span class="s1">&#39;Viewing </span><span class="si">%s</span><span class="s1">. Hit Enter to continue.&#39;</span> <span class="o">%</span><span class="n">filepath</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="uvot_runner.uvot_measurer"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.uvot_runner.uvot_measurer">[docs]</a>    <span class="k">def</span> <span class="nf">uvot_measurer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">measure</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="uvot_runner.uvot_measurer"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.uvot_runner.uvot_measurer">[docs]</a>    <span class="k">def</span> <span class="nf">uvot_measurer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">measure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">default_fs</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Wrapper for running ``UVOTDETECT`` and extracting photometry information from all requested observations.</span>
 
 <span class="sd">        Args:</span>
@@ -307,11 +272,10 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         
         <span class="kn">from</span> <span class="nn">astropy.table</span> <span class="k">import</span> <span class="n">Table</span>
-        <span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
         <span class="kn">from</span> <span class="nn">uvot_photometry</span> <span class="k">import</span> <span class="n">MeasureSource</span>
     
         <span class="c1">#creating Astropy table for storing the photometry information</span>
-        <span class="n">ptab</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;filter&#39;</span><span class="p">,</span><span class="s1">&#39;MJD&#39;</span><span class="p">,</span><span class="s1">&#39;Mag&#39;</span><span class="p">,</span><span class="s1">&#39;MagErr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensity&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensityErr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensityJy&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensityJyErr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxExtCorr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxExtcorrErr&#39;</span><span class="p">),</span>
+        <span class="n">ptab</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;filter&#39;</span><span class="p">,</span><span class="s1">&#39;MJD&#39;</span><span class="p">,</span><span class="s1">&#39;Mag&#39;</span><span class="p">,</span><span class="s1">&#39;MagErr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensity&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensityErr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensityJy&#39;</span><span class="p">,</span><span class="s1">&#39;FluxDensityJyErr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxExtCorr&#39;</span><span class="p">,</span><span class="s1">&#39;FluxExtCorrErr&#39;</span><span class="p">),</span>
                                 <span class="n">dtype</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;S2&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span><span class="s1">&#39;f8&#39;</span><span class="p">))</span>
     
         <span class="c1">#defining units for each column</span>
@@ -322,28 +286,38 @@
         <span class="n">ptab</span><span class="p">[</span><span class="s1">&#39;FluxDensityErr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">erg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">second</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">AA</span>
         <span class="n">ptab</span><span class="p">[</span><span class="s1">&#39;FluxDensityJy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Jy</span>
         <span class="n">ptab</span><span class="p">[</span><span class="s1">&#39;FluxDensityJyErr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Jy</span>
-        <span class="n">ptab</span><span class="p">[</span><span class="s1">&#39;Flux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">erg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">second</span> 
-        <span class="n">ptab</span><span class="p">[</span><span class="s1">&#39;FluxErr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">erg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">second</span>
+        <span class="n">ptab</span><span class="p">[</span><span class="s1">&#39;FluxExtCorr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">erg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">second</span> 
+        <span class="n">ptab</span><span class="p">[</span><span class="s1">&#39;FluxExtCorrErr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">erg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">second</span>
     
         <span class="c1">#run through all image files to perform and/or extract photometry</span>
         <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span><span class="p">:</span>
-            <span class="n">measurer</span> <span class="o">=</span> <span class="n">MeasureSource</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
-            <span class="n">filtr</span> <span class="o">=</span> <span class="n">measurer</span><span class="o">.</span><span class="n">band</span>
+            <span class="n">measurer</span> <span class="o">=</span> <span class="n">MeasureSource</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span><span class="n">default_fs</span> <span class="o">=</span> <span class="n">default_fs</span><span class="p">)</span>
+            <span class="n">measurer</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_coords</span>
+
             <span class="k">if</span> <span class="n">measure</span><span class="p">:</span>
                 <span class="n">tmp</span> <span class="o">=</span> <span class="n">measurer</span><span class="o">.</span><span class="n">run_uvotsource</span><span class="p">()</span>
              
             <span class="n">objphot</span> <span class="o">=</span> <span class="n">measurer</span><span class="o">.</span><span class="n">get_observation_data</span><span class="p">()</span>
-    
-            <span class="c1">#getting extinction-corrected fluxes</span>
-            <span class="n">flux</span> <span class="o">=</span> <span class="n">correct_extinction</span><span class="p">(</span><span class="n">objphot</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">],</span><span class="n">filtr</span><span class="p">,</span><span class="n">EBminV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ebminv</span><span class="p">)</span>
-            <span class="n">fluxerr</span> <span class="o">=</span> <span class="n">correct_extinction</span><span class="p">(</span><span class="n">objphot</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span><span class="n">filtr</span><span class="p">,</span><span class="n">EBminV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ebminv</span><span class="p">)</span>
-            <span class="n">objphot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
-            <span class="n">objphot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fluxerr</span><span class="p">)</span>
-    
+
             <span class="n">ptab</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="n">objphot</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="n">ptab</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s1">&#39;filter&#39;</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">ptab</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s1">&#39;filter&#39;</span><span class="p">)</span></div>
         
+
+<div class="viewcode-block" id="uvot_runner.uvot_sed_maker"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.uvot_runner.uvot_sed_maker">[docs]</a>    <span class="k">def</span> <span class="nf">uvot_sed_maker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">startdate</span><span class="p">,</span><span class="n">enddate</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">uvot_sed</span> <span class="k">import</span> <span class="n">MakeSED</span>
+
+        <span class="c1">#preparing files</span>
+        <span class="n">sed</span> <span class="o">=</span> <span class="n">MakeSED</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span><span class="p">)</span>
+        <span class="n">sortedpaths</span> <span class="o">=</span> <span class="n">sed</span><span class="o">.</span><span class="n">sortFilelistByFilter</span><span class="p">()</span>
+        <span class="n">sed</span><span class="o">.</span><span class="n">sortedpaths</span> <span class="o">=</span> <span class="n">sortedpaths</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepaths</span> <span class="o">=</span> <span class="n">sed</span><span class="o">.</span><span class="n">combineFits</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span><span class="n">enddate</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">uvot_primer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uvot_detecter</span><span class="p">(</span><span class="n">default_fs</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">photometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uvot_measurer</span><span class="p">(</span><span class="n">default_fs</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">photometry</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;3C66A_</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">_seds.fits&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">startdate</span><span class="o">.</span><span class="n">mjd</span><span class="p">,</span><span class="n">enddate</span><span class="o">.</span><span class="n">mjd</span><span class="p">),</span><span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../run_uvot_analysis.html#run_uvot_analysis.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
 
@@ -355,10 +329,12 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify coordinates for the source of interest.&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-s&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify the name for the source of interest. Ignored if -c is specified.&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-ebv&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;User-specified E(B-V) value. Will query IRSA database, if not specified.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-date_range&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;1990-01-01,2020-01-01&#39;</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;Comma-separated beginning and end of date(time) range to average images for SED construction. Format is somewhat flexible, but try </span><span class="se">\&#39;</span><span class="s1">YYYY-MM-DD HH:MM,YYYY-MM-DD HH:MM</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--check&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;View all images with the source marked to check observation quality.&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--detect&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;Run UVOTDETECT on all images.&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--measure&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;Run UVOTSOURCE on all images to get photometry.&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--extract_only&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;Extract photometry information from existing UVOTSOURCE output files, without rerunning UVOTSOURCE.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--sed&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;Extract source SED by combining all observations/images located in the path (specified with -p) and falling within the date range (specified by -date_range)&#39;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="c1">#use all observations in the provided directory unless a specific obs is requested</span>
@@ -366,19 +342,23 @@
         <span class="n">filedirs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">f</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
         <span class="n">tmppaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/uvot/image/*sk.img.gz&#39;</span><span class="o">%</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">filedirs</span> <span class="p">]</span>
         <span class="n">filepaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">tmppaths</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
+        <span class="nb">print</span> <span class="n">filepaths</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
         <span class="n">filepaths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/000*/uvot/image/*sk.img.gz&#39;</span> <span class="o">%</span><span class="n">args</span><span class="o">.</span><span class="n">p</span><span class="p">)</span><span class="c1">#setting up filepaths</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">obspath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">p</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">obs</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">obspath</span><span class="p">):</span>
             <span class="n">filepaths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/uvot/image/*sk.img.gz&#39;</span><span class="o">%</span><span class="n">obspath</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s1">&#39;Will use images from observation </span><span class="si">%s</span><span class="s1"> only&#39;</span> <span class="o">%</span><span class="n">args</span><span class="o">.</span><span class="n">obs</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> does not exist.&#39;</span> <span class="o">%</span><span class="n">obspath</span><span class="p">)</span>
 
     <span class="c1">#raise an error if an operation is not selected.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span> <span class="n">args</span><span class="o">.</span><span class="n">measure</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">check</span> <span class="ow">or</span>  <span class="n">args</span><span class="o">.</span><span class="n">detect</span> <span class="ow">or</span>  <span class="n">args</span><span class="o">.</span><span class="n">extract_only</span> <span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span> <span class="n">args</span><span class="o">.</span><span class="n">measure</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">check</span> <span class="ow">or</span>  <span class="n">args</span><span class="o">.</span><span class="n">detect</span> <span class="ow">or</span>  <span class="n">args</span><span class="o">.</span><span class="n">extract_only</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">sed</span> <span class="p">):</span>
         <span class="k">raise</span> <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Nothing to do. Use --detect, --check, --measure, or --extract_only flags for desired operations or -h for help.&#39;</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">sed</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">date_range</span> <span class="o">==</span> <span class="s1">&#39;1990-01-01,2020-01-01&#39;</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;Option -date_range not specified. Will use all provided observations for SED.&#39;</span>
 
 
     <span class="c1">#run all the wrappers, though unless --detect --check or --measure are given, nothing will happen!</span>
@@ -390,7 +370,7 @@
     <span class="n">prime_source</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">c</span><span class="p">:</span>
         <span class="c1">#need to get the parsing right</span>
-        <span class="n">runner</span><span class="o">.</span><span class="n">source_ra</span><span class="p">,</span> <span class="n">runner</span><span class="o">.</span><span class="n">source_dec</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">c</span>
+        <span class="n">runner</span><span class="o">.</span><span class="n">source_coords</span> <span class="o">=</span> <span class="n">SkyCoord</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">s</span><span class="p">:</span>
         <span class="c1">#query NED for the source position using provided source name and set source_ra and source_dec</span>
         <span class="n">runner</span><span class="o">.</span><span class="n">query_for_source_coords</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
@@ -399,22 +379,34 @@
         <span class="nb">print</span> <span class="s1">&#39;Source not specified by either -c or -s option. Will make user select the source location interactively.&#39;</span>
         <span class="nb">print</span> <span class="s1">&#39;Quit (ctrl-C) and specifiy source name with -s or source coordinates with -c options if the source is known.&#39;</span>
 
-
     <span class="c1">#get user to identify background region (and source region if coordinates or source name are not supplied)</span>
-    <span class="n">runner</span><span class="o">.</span><span class="n">uvot_primer</span><span class="p">(</span><span class="n">prime_source</span><span class="o">=</span><span class="n">prime_source</span><span class="p">)</span>
-
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">detect</span><span class="p">:</span>
+        <span class="n">runner</span><span class="o">.</span><span class="n">uvot_primer</span><span class="p">(</span><span class="n">prime_source</span><span class="o">=</span><span class="n">prime_source</span><span class="p">)</span>
         <span class="n">runner</span><span class="o">.</span><span class="n">uvot_detecter</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">check</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;User selected coordinates will only be used if region files are missing.&#39;</span>
+        <span class="n">runner</span><span class="o">.</span><span class="n">uvot_primer</span><span class="p">(</span><span class="n">prime_source</span><span class="o">=</span><span class="n">prime_source</span><span class="p">)</span>
         <span class="n">runner</span><span class="o">.</span><span class="n">uvot_checker</span><span class="p">()</span>
 
     <span class="c1">#can set up options for multiple formats here, but will probably default to fits</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">measure</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">extract_only</span><span class="p">:</span>
         <span class="n">photometry</span> <span class="o">=</span> <span class="n">runner</span><span class="o">.</span><span class="n">uvot_measurer</span><span class="p">(</span><span class="n">measure</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">extract_only</span><span class="p">)</span>
         <span class="c1">#photometry.write(&#39;OJ287_uvot_photometry_wExtCorr.dat&#39;,format=&#39;ascii.commented_header&#39;)</span>
-        <span class="n">photometry</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">o</span><span class="p">)</span></div>
+        <span class="n">photometry</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">o</span><span class="p">,</span><span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">sed</span><span class="p">:</span>
+        <span class="n">start</span><span class="p">,</span><span class="n">end</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">date_range</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">runner</span><span class="o">.</span><span class="n">uvot_sed_maker</span><span class="p">(</span><span class="n">Time</span><span class="p">(</span><span class="n">start</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()),</span><span class="n">Time</span><span class="p">(</span><span class="n">end</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">start</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="n">start</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="n">runner</span><span class="o">.</span><span class="n">uvot_sed_maker</span><span class="p">(</span><span class="n">Time</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">start</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()),</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;mjd&#39;</span><span class="p">),</span><span class="n">Time</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">end</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()),</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;mjd&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid date_range format. Try providing dates in MJD or ISO formats.&#39;</span><span class="p">)</span></div>
+
+
 
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
