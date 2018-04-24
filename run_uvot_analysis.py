@@ -174,7 +174,7 @@ class uvot_runner(object):
         return ptab.group_by('filter')
         
 
-    def uvot_sed_maker(self,startdate,enddate):
+    def uvot_sed_maker(self,startdate,enddate,outbase):
         from uvot_sed import MakeSED
 
         #preparing files
@@ -186,7 +186,7 @@ class uvot_runner(object):
         self.uvot_primer()
         self.uvot_detecter(default_fs = False)
         photometry = self.uvot_measurer(default_fs = False)
-        photometry.write('3C66A_%s-%s_seds.fits'%(startdate.mjd,enddate.mjd),overwrite=True)
+        photometry.write('%s_%s-%s_sed.fits'%(outbase,startdate.mjd,enddate.mjd,overwrite=True)
 
 
 def main():
@@ -263,16 +263,20 @@ def main():
     #can set up options for multiple formats here, but will probably default to fits
     if args.measure or args.extract_only:
         photometry = runner.uvot_measurer(measure = not args.extract_only)
-        #photometry.write('OJ287_uvot_photometry_wExtCorr.dat',format='ascii.commented_header')
         photometry.write(args.o,overwrite=True)
 
     if args.sed:
         start,end = args.date_range.split(',')
+        if args.s:
+            outbase = args.s
+        else:
+            outbase = 'Source'
+
         try:
-            runner.uvot_sed_maker(Time(start.lstrip()),Time(end.lstrip()))
+            runner.uvot_sed_maker(Time(start.lstrip()),Time(end.lstrip()),outbase)
         except ValueError:
             if start.lstrip().isdigit() and start.lstrip().isdigit():
-                runner.uvot_sed_maker(Time(np.float(start.lstrip()),format='mjd'),Time(np.float(end.lstrip()),format='mjd'))
+                runner.uvot_sed_maker(Time(np.float(start.lstrip()),format='mjd'),Time(np.float(end.lstrip()),format='mjd'),outbase)
             else:
                 raise ValueError('Invalid date_range format. Try providing dates in MJD or ISO formats.')
 

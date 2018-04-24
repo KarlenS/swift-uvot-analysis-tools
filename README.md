@@ -6,7 +6,7 @@ Python helper wrappers for HEASoft UVOT analysis tools.
 - Runs uvotdetect and generates region files for all observations
 - Rudimentary data quality check by displaying all images in ds9
 - Runs uvotsource on all observations
- -- currently set up for producing observation-by-observation light curve data (if multiple exposures exist per observation, they are summed)
+ -- currently set up for producing observation-by-observation light curve data (if multiple exposures exist per observation, they are summed) and SED points
 ```
 ## Required Software
 
