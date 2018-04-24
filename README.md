@@ -56,7 +56,7 @@ To only parse photometry data and store it in *MySource_photometry.cvs* (in csv 
 
 ***NOTE*: Do this if *uvotsource* has already been run with --measure**
 ```bash
-$> python run_uvot_analysis.py -p /path/to/Swift/data --measure -o MySource_phometry.csv --print_only
+$> python run_uvot_analysis.py -p /path/to/Swift/data --measure -o MySource_phometry.csv --extract_only
 ```
 
 As in previous steps, this works for a single observation as well.

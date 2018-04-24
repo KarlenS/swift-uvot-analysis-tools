@@ -34,7 +34,6 @@ class UVOTLightCurve(object):
             plt.ylim([0.1E-14,2E-14])
 
             for f in filters:
-                #ax.errorbar(dat['mjd'][dat['filter']==f],dat['Mag'][dat['filter']==f],yerr=dat['MagErr'][dat['filter']==f],fmt='.')
                 ax.errorbar(dat['mjd'][dat['filter']==f],1E14*dat['FluxDensity'][dat['filter']==f],yerr=1E14*dat['FluxDensityErr'][dat['filter']==f],label='f',fmt='.')
             ax.legend()
 
@@ -51,8 +50,8 @@ class UVOTLightCurve(object):
                 
         fig.text(0.04, 0.5,r'Flux Density [ 10$^{-14}$ erg cm$^{-2}$ s$^{-1}$ Hz$^{-1}$ ]',va='center',rotation='vertical')
         plt.xlabel('MJD')
-        plt.savefig('3C66A_lightcurves.png')
-        #plt.show() 
+        #plt.savefig("lightcurve.png")
+        plt.show() 
 
 def main():
 

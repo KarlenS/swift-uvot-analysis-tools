@@ -16,6 +16,7 @@ import sys
 import glob
 import numpy as np
 import argparse
+from tqdm import tqdm
 
 from astropy.coordinates import SkyCoord
 from astropy import units as u
@@ -160,7 +161,7 @@ class uvot_runner(object):
         ptab['FluxExtCorrErr'].unit = u.erg/u.cm/u.cm/u.second
     
         #run through all image files to perform and/or extract photometry
-        for filepath in self.filepaths:
+        for filepath in tqdm(self.filepaths):
             measurer = MeasureSource(filepath,default_fs = default_fs)
             measurer.source_coords = self.source_coords
 
@@ -186,7 +187,7 @@ class uvot_runner(object):
         self.uvot_primer()
         self.uvot_detecter(default_fs = False)
         photometry = self.uvot_measurer(default_fs = False)
-        photometry.write('%s_%s-%s_sed.fits'%(outbase,startdate.mjd,enddate.mjd,overwrite=True)
+        photometry.write('%s_%s-%s_sed.fits'%(outbase,startdate.mjd,enddate.mjd),overwrite=True)
 
 
 def main():
