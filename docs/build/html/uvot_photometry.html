@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -23,25 +25,19 @@
   
 
   
-  
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="swift-uvot-python-tools 0.7 documentation" href="index.html"/> 
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -82,8 +78,11 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"><ul>
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">uvot_photometry module</a></li>
 </ul>
 </div>
@@ -96,34 +95,56 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">swift-uvot-python-tools</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">swift-uvot-python-tools</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>uvot_photometry module</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>uvot_photometry module</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/uvot_photometry.txt" rel="nofollow"> View page source</a>
+            
+            
+              <a href="https://github.com/KarlenS/swift-uvot-analysis-tools//blob/master/docs/source/uvot_photometry.rst" class="fa fa-github"> Edit on GitHub</a>
+            
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -140,31 +161,31 @@
 <dl class="attribute">
 <dt id="uvot_photometry.MeasureSource.filepath">
 <code class="descname">filepath</code><a class="headerlink" href="#uvot_photometry.MeasureSource.filepath" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; path of fits image to input into <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code></p>
+<dd><p><em>str</em> – path of fits image to input into <code class="docutils literal"><span class="pre">UVOTSOURCE</span></code></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="uvot_photometry.MeasureSource.source_coords">
 <code class="descname">source_coords</code><a class="headerlink" href="#uvot_photometry.MeasureSource.source_coords" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a> &#8211; coordinates of the source</p>
+<dd><p><a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a> – coordinates of the source</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="uvot_photometry.MeasureSource.dirpath">
 <code class="descname">dirpath</code><a class="headerlink" href="#uvot_photometry.MeasureSource.dirpath" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; directory containing <code class="docutils literal"><span class="pre">filepath</span></code></p>
+<dd><p><em>str</em> – directory containing <code class="docutils literal"><span class="pre">filepath</span></code></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="uvot_photometry.MeasureSource.obs">
 <code class="descname">obs</code><a class="headerlink" href="#uvot_photometry.MeasureSource.obs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; observation ID parsed from <code class="docutils literal"><span class="pre">filepath</span></code></p>
+<dd><p><em>str</em> – observation ID parsed from <code class="docutils literal"><span class="pre">filepath</span></code></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="uvot_photometry.MeasureSource.band">
 <code class="descname">band</code><a class="headerlink" href="#uvot_photometry.MeasureSource.band" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; observation band parsed from <code class="docutils literal"><span class="pre">filepath</span></code></p>
+<dd><p><em>str</em> – observation band parsed from <code class="docutils literal"><span class="pre">filepath</span></code></p>
 </dd></dl>
 
 <dl class="method">
@@ -181,9 +202,9 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>val</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.6)"><em>float</em></a>) &#8211; flux or mag requiring extinction correction (flux is assumed, unless <code class="docutils literal"><span class="pre">mag</span> <span class="pre">=</span> <span class="pre">True</span></code>)</li>
-<li><strong>filtr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) &#8211; UVOT filter name (vv, uu, bb, w1, m2, w2)</li>
-<li><strong>source_coords</strong> (<a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a>) &#8211; Source position to be used for querying the amount of extinction</li>
+<li><strong>val</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.6)"><em>float</em></a>) – flux or mag requiring extinction correction (flux is assumed, unless <code class="docutils literal"><span class="pre">mag</span> <span class="pre">=</span> <span class="pre">True</span></code>)</li>
+<li><strong>filtr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – UVOT filter name (vv, uu, bb, w1, m2, w2)</li>
+<li><strong>source_coords</strong> (<a class="reference external" href="http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord">astropy.coordinates.SkyCoord</a>) – Source position to be used for querying the amount of extinction</li>
 </ul>
 </td>
 </tr>
@@ -256,6 +277,7 @@ is taken from the class attributes, which are obtained by parsing the provided <
 
 
            </div>
+           
           </div>
           <footer>
   
@@ -268,7 +290,7 @@ is taken from the class attributes, which are obtained by parsing the provided <
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -287,15 +309,17 @@ is taken from the class attributes, which are obtained by parsing the provided <
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'0.7',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -304,14 +328,13 @@ is taken from the class attributes, which are obtained by parsing the provided <
     <script type="text/javascript" src="_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

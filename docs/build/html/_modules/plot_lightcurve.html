@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -23,26 +25,19 @@
   
 
   
-  
     <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="swift-uvot-python-tools 0.7 documentation" href="../index.html"/>
-        <link rel="up" title="Module code" href="index.html"/> 
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -83,8 +78,11 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"></div>
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
             
           
         </div>
@@ -94,34 +92,52 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">swift-uvot-python-tools</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">swift-uvot-python-tools</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="index.html">Module code</a> &raquo;</li>
-      
-    <li>plot_lightcurve</li>
+        
+      <li>plot_lightcurve</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-        
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -161,11 +177,11 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">multipanel</span><span class="p">:</span>
             <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mf">0.1E-14</span><span class="p">,</span><span class="mi">2</span><span class="n">E</span><span class="o">-</span><span class="mi">14</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mf">0.1E-14</span><span class="p">,</span><span class="mf">2E-14</span><span class="p">])</span>
 
             <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
                 <span class="c1">#ax.errorbar(dat[&#39;mjd&#39;][dat[&#39;filter&#39;]==f],dat[&#39;Mag&#39;][dat[&#39;filter&#39;]==f],yerr=dat[&#39;MagErr&#39;][dat[&#39;filter&#39;]==f],fmt=&#39;.&#39;)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;mjd&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="mi">1</span><span class="n">E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensity&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">yerr</span><span class="o">=</span><span class="mi">1</span><span class="n">E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensityErr&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;mjd&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="mf">1E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensity&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">yerr</span><span class="o">=</span><span class="mf">1E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensityErr&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -175,11 +191,11 @@
             <span class="n">cols</span> <span class="o">=</span> <span class="n">cycle</span><span class="p">(</span><span class="s1">&#39;bgrcmk&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">ax</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span><span class="n">filters</span><span class="p">):</span>
                 <span class="c1">#ax.errorbar(dat[&#39;mjd&#39;][dat[&#39;filter&#39;]==f],dat[&#39;Mag&#39;][dat[&#39;filter&#39;]==f],yerr=dat[&#39;MagErr&#39;][dat[&#39;filter&#39;]==f],fmt=&#39;.&#39;)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;mjd&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="mi">1</span><span class="n">E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensity&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">yerr</span><span class="o">=</span><span class="mi">1</span><span class="n">E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensityErr&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">f</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">cols</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;mjd&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="mf">1E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensity&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">yerr</span><span class="o">=</span><span class="mf">1E14</span><span class="o">*</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;FluxDensityErr&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">f</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">cols</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
                 <span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;mjd&#39;</span><span class="p">][</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">f</span><span class="p">])</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
                 
-        <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="s1">r&#39;Flux Density [ 10$^{-14}$ erg cm$^{-2}$ s$^{-1}$ Hz$^{-1}$ ]&#39;</span><span class="p">,</span><span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span><span class="n">rotation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;Flux Density [ 10$^{-14}$ erg cm$^{-2}$ s$^{-1}$ Hz$^{-1}$ ]&#39;</span><span class="p">,</span><span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span><span class="n">rotation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;MJD&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;3C66A_lightcurves.png&#39;</span><span class="p">)</span></div></div>
         <span class="c1">#plt.show() </span>
@@ -193,11 +209,12 @@
     <span class="n">lcdata</span> <span class="o">=</span> <span class="n">lc</span><span class="o">.</span><span class="n">readFile</span><span class="p">()</span>
     <span class="n">lc</span><span class="o">.</span><span class="n">plotLightCurves</span><span class="p">(</span><span class="n">lcdata</span><span class="p">)</span></div>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 
            </div>
+           
           </div>
           <footer>
   
@@ -210,7 +227,7 @@
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -229,15 +246,17 @@
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
             VERSION:'0.7',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
@@ -246,14 +265,13 @@
     <script type="text/javascript" src="../_static/js/theme.js"></script>
   
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>
