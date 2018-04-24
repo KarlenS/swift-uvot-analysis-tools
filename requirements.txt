@@ -3,3 +3,4 @@ astropy
 pyregion
 astroquery
 tqdm
+seaborn

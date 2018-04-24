@@ -45,7 +45,6 @@ class UVOTLightCurve(object):
             for ax,f in zip(axes,filters):
                 #ax.errorbar(dat['mjd'][dat['filter']==f],dat['Mag'][dat['filter']==f],yerr=dat['MagErr'][dat['filter']==f],fmt='.')
                 ax.errorbar(dat['mjd'][dat['filter']==f],1E14*dat['FluxDensity'][dat['filter']==f],yerr=1E14*dat['FluxDensityErr'][dat['filter']==f],label=f,color=cols.next(),fmt='.')
-                print np.max(dat['mjd'][dat['filter']==f])
                 ax.legend()
                 
         fig.text(0.04, 0.5,r'Flux Density [ 10$^{-14}$ erg cm$^{-2}$ s$^{-1}$ Hz$^{-1}$ ]',va='center',rotation='vertical')

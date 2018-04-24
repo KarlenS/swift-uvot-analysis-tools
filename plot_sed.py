@@ -29,7 +29,6 @@ def plotSED(dat,axs,color='black',label=None):
         ferrcorr = ferr*vals*10**(0.4*R_lambda[keys]*ebminv)
         if True in ind:
             ax.errorbar(c/vals,flux*vals,yerr=ferr, fmt='o',color=color,alpha=0.7)
-            #print '%.5e %.5e %.5e' %(c/vals, flux[0]*vals, ferr[0]*vals, fluxcorr[0], ferrcorr[0])
             ax_corr.errorbar(c/vals,fluxcorr,yerr=ferrcorr, fmt='o',color=color,alpha=0.7)
 
     ax.set_ylabel(r'Flux [ erg cm$^{-2}$ s$^{-1}$ ]')
