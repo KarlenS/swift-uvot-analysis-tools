@@ -1,4 +1,4 @@
-#!/local/gammasoft/anaconda2/bin/python
+#!/Users/karlen/anaconda2/envs/astroconda/bin/python
 
 '''
 Module for determining the source position using ``UVOTDETECT`` and for generating source and background region files used in the photometry.
@@ -61,13 +61,13 @@ class PositionExtractor(object):
         regfile.close()
 
         # write background region file if it doesn't already exist 
-        if not path.isfile(self.bkgregfile):
-            bkgregion = 'fk5;circle(%s,%s,20")' %(self.bkg_coords.ra.value,self.bkg_coords.dec.value)
-            bkgregfile = open(self.bkgregfile,'w')
-            bkgregfile.write(bkgregion)
-            bkgregfile.close()
-        else:
-            print 'Background region file already exists. Not recreating.'
+        #if not path.isfile(self.bkgregfile):
+        bkgregion = 'fk5;circle(%s,%s,20")' %(self.bkg_coords.ra.value,self.bkg_coords.dec.value)
+        bkgregfile = open(self.bkgregfile,'w')
+        bkgregfile.write(bkgregion)
+        bkgregfile.close()
+        #else:
+        #    print 'Background region file already exists. Not recreating.'
 
   
     def run_uvotimsum(self, inputFile, outputFile):

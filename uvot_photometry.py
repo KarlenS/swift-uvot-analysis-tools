@@ -1,4 +1,4 @@
-#!/local/gammasoft/anaconda2/bin/python
+#!/Users/karlen/anaconda2/envs/astroconda/bin/python
 
 '''
 Use ``UVOTSOURCE`` to get aperture photometry from UVOT images.

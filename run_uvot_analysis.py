@@ -1,4 +1,4 @@
-#!/local/gammasoft/anaconda2/bin/python
+#!/Users/karlen/anaconda2/envs/astroconda/bin/python
 
 '''
 This is the main module for an automated Swift-UVOT analysis.

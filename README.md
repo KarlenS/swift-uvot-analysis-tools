@@ -17,6 +17,9 @@ Python packages:
 $> pip -r install requirements.txt
 ```
 
+## [Tutorial Video](https://youtu.be/B9SCERNLt_0)
+
+
 ## Generating photometry and light curve data
 
 To see all available options:

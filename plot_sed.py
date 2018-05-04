@@ -1,4 +1,4 @@
-#!/local/gammasoft/anaconda2/bin/python
+#!/Users/karlen/anaconda2/envs/astroconda/bin/python
 from astropy.io import fits
 import matplotlib.pyplot as plt
 import argparse
@@ -16,9 +16,10 @@ def plotSED(dat,axs,color='black',label=None):
     ebminv = 0.085
     R_lambda = {'uu':4.89172,'w1':6.55663,'m2':9.15389,'w2':8.10997,'bb':4.00555,'vv':2.99692}
 
-    (ax, ax_corr) = axs
+    ax_corr = axs
+    #(ax, ax_corr) = axs
 
-    ax.errorbar(None,None,fmt='o',color=color,label=label,alpha=0.7)
+    #ax.errorbar(None,None,fmt='o',color=color,label=label,alpha=0.7)
     ax_corr.errorbar(None,None,fmt='o',color=color,label=label,alpha=0.7)
 
     for keys,vals in central_wav.items():
@@ -28,10 +29,10 @@ def plotSED(dat,axs,color='black',label=None):
         fluxcorr = flux*vals*10**(0.4*R_lambda[keys]*ebminv)
         ferrcorr = ferr*vals*10**(0.4*R_lambda[keys]*ebminv)
         if True in ind:
-            ax.errorbar(c/vals,flux*vals,yerr=ferr, fmt='o',color=color,alpha=0.7)
+        #    ax.errorbar(c/vals,flux*vals,yerr=ferr, fmt='o',color=color,alpha=0.7)
             ax_corr.errorbar(c/vals,fluxcorr,yerr=ferrcorr, fmt='o',color=color,alpha=0.7)
 
-    ax.set_ylabel(r'Flux [ erg cm$^{-2}$ s$^{-1}$ ]')
+    #ax.set_ylabel(r'Flux [ erg cm$^{-2}$ s$^{-1}$ ]')
     ax_corr.set_ylabel(r'Flux (ExtCorr) [ erg cm$^{-2}$ s$^{-1}$ ]')
     ax_corr.set_xlabel(r'Frequency [ Hz ]')
 
@@ -39,8 +40,8 @@ def plotSED(dat,axs,color='black',label=None):
     #ax_corr.set_ylim([1E-11,9E-11])
 
 
-    ax.legend(ncol=4)
-    ax_corr.legend(ncol=4)
+    #ax.legend(ncol=4)
+    #ax_corr.legend(ncol=4)
 
 def main():
 
@@ -54,13 +55,13 @@ def main():
 
     if args.f:
         dat = readData(args.f)
-        fig, axs = plt.subplots(2,sharex=True,figsize=(10, 6))
+        fig, axs = plt.subplots(1,sharex=True,figsize=(10, 6))
         plotSED(dat,axs)
     
     if args.l:
         files = np.genfromtxt(args.l,dtype=str)
         colors = plt.cm.rainbow(np.linspace(0,1,np.size(files)))
-        fig, axs = plt.subplots(2,sharex=True,figsize=(10, 6))
+        fig, axs = plt.subplots(1,sharex=True,figsize=(10, 6))
         for f,c in zip(files,colors):
             dat = readData(f)
             plotSED(dat,axs,color=c,label=f[6:21])

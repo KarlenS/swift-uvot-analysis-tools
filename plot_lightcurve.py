@@ -1,4 +1,4 @@
-#!/local/gammasoft/anaconda2/bin/python
+#!/Users/karlen/anaconda2/envs/astroconda/bin/python
 
 '''
 Quickly plots up the UVOT light curve in each available band
