@@ -141,14 +141,14 @@ class uvot_runner(object):
         .. _astropy.table.Table: 
             http://docs.astropy.org/en/stable/api/astropy.table.Table.html
         '''
-        
+
         from astropy.table import Table
         from uvot_photometry import MeasureSource
-    
+
         #creating Astropy table for storing the photometry information
         ptab = Table(names=('filter','MJD','Mag','MagErr','FluxDensity','FluxDensityErr','FluxDensityJy','FluxDensityJyErr','FluxExtCorr','FluxExtCorrErr'),
                                 dtype=('S2','f8','f8','f8','f8','f8','f8','f8','f8','f8'))
-    
+
         #defining units for each column
         ptab['MJD'].unit = u.d
         ptab['Mag'].unit = u.mag
@@ -159,7 +159,7 @@ class uvot_runner(object):
         ptab['FluxDensityJyErr'].unit = u.Jy
         ptab['FluxExtCorr'].unit = u.erg/u.cm/u.cm/u.second 
         ptab['FluxExtCorrErr'].unit = u.erg/u.cm/u.cm/u.second
-    
+
         #run through all image files to perform and/or extract photometry
         for filepath in tqdm(self.filepaths):
             measurer = MeasureSource(filepath,default_fs = default_fs)
@@ -167,13 +167,13 @@ class uvot_runner(object):
 
             if measure:
                 tmp = measurer.run_uvotsource()
-             
+
             objphot = measurer.get_observation_data()
 
             ptab.add_row(objphot)
-        
+
         return ptab.group_by('filter')
-        
+
 
     def uvot_sed_maker(self,startdate,enddate,outbase):
         from uvot_sed import MakeSED
