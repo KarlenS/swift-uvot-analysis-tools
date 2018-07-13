@@ -66,7 +66,8 @@ class MeasureSource(object):
             http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi        
         '''
 
-        central_wav = {'uu':3465.,'w1':2600.,'m2':2246.,'w2':1928.,'bb':4392.,'vv':5468.}
+        #central_wav = {'uu':3465.,'w1':2600.,'m2':2246.,'w2':1928.,'bb':4392.,'vv':5468.}
+        bwidth = {'uu':785.,'w1':693.,'m2':498.,'w2':657.,'bb':975.,'vv':769.}
         R_lambda = {'uu':4.89172,'w1':6.55663,'m2':9.15389,'w2':8.10997,'bb':4.00555,'vv':2.99692}
 
 
@@ -82,7 +83,8 @@ class MeasureSource(object):
         if mag:
             return val - R_lambda[filtr]*EBminV
         else:
-            return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
+            return val*bwidth[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
+            #return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
 
 
     def run_uvotsource(self):
