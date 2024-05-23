@@ -94,7 +94,7 @@ class SourceImageViewer(ds9.DS9):
             bkg_dec = bkgregion[0].coord_list[1]
             self.bkg_coords = SkyCoord('%s %s' %(bkg_ra, bkg_dec),unit=(u.deg, u.deg))
         except IOError:
-            print 'Background region file missing. Will try default coordinates.'
+            print('Background region file missing. Will try default coordinates.')
         
         self.display_bkg_region()
 
@@ -107,7 +107,7 @@ class SourceImageViewer(ds9.DS9):
 
             self.source_coords = SkyCoord('%s %s' %(ra,dec),unit=(u.deg, u.deg))
         except IOError:
-            print 'Region file missing. Only showing default coordinates, if any.'
+            print('Region file missing. Only showing default coordinates, if any.')
 
         self.display_source_region()
 
@@ -168,18 +168,18 @@ class SourceImageViewer(ds9.DS9):
         #open loop to keep prompting the user for background selection if they're not happy after an initial attempt
         while True:
             self.display_source_region()
-            print 'Use the DS9 window to select a location for the background region.'
+            print('Use the DS9 window to select a location for the background region.')
             coords = self.get_user_coords()
             bkg_ra, bkg_dec = coords.split()
             self.bkg_coords = SkyCoord('%s %s' %(bkg_ra,bkg_dec),unit=(u.deg, u.deg))
             self.display_bkg_region()
 
-            response = raw_input('Happy with the background selection (y / anything_else)?\n') 
+            response = input('Happy with the background selection (y / anything_else)?\n') 
             if response == 'y':
-                print 'Great! That is all we need. Bye.'
+                print('Great! That is all we need. Bye.')
                 break
             else:
-                print 'Fine, try again...'
+                print('Fine, try again...')
                 self.remove_regions()
 
         self.set('quit')
@@ -201,18 +201,18 @@ class SourceImageViewer(ds9.DS9):
         #open loop to keep prompting the user for source selection if they're not happy after an initial attempt
         while True:
 
-            print 'Use the DS9 window to select a source region.'
+            print('Use the DS9 window to select a source region.')
             coords = self.get_user_coords()
             ra, dec = coords.split()
             self.source_coords = SkyCoord('%s %s' %(ra,dec),unit=(u.deg, u.deg))
             self.display_source_region()
 
-            response = raw_input('Happy with source location selection (y/n)?\n') 
+            response = input('Happy with source location selection (y/n)?\n') 
             if response == 'y':
-                print 'Great! That is all we need. Bye.'
+                print('Great! That is all we need. Bye.')
                 break
             else:
-                print 'Fine, try again...'
+                print('Fine, try again...')
                 self.remove_regions()
 
         return self.source_coords 

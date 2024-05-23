@@ -53,7 +53,9 @@ class uvot_runner(object):
 
         try:
             coords = Ned.query_object(source_name)
-            self.source_coords = SkyCoord('%s %s' %(coords['RA(deg)'][0], coords['DEC(deg)'][0]),unit=(u.deg, u.deg))
+            print(coords)
+            #self.source_coords = SkyCoord('%s %s' %(coords['RA(deg)'][0], coords['DEC(deg)'][0]),unit=(u.deg, u.deg))
+            self.source_coords = SkyCoord('%s %s' %(coords['RA'][0], coords['DEC'][0]),unit=(u.deg, u.deg))
         except astroquery.exceptions.RemoteServiceError:
             from astroquery.simbad import Simbad
             coords = Simbad.query_object(source_name)
@@ -88,6 +90,7 @@ class uvot_runner(object):
         iv.source_coords = self.source_coords
 
         self.bkg_coords = iv.prime_bkg() 
+        print("Primer done")
 
 
     def uvot_detecter(self,default_fs = True):
@@ -102,7 +105,7 @@ class uvot_runner(object):
         pos.bkg_coords = self.bkg_coords
 
         for filepath in self.filepaths:
-            print 'working on %s...' %filepath 
+            print('working on %s...' %filepath )
             pos.filepath = filepath
             out, err = pos.run_uvotdetect()
             pos.getNearestSource()
@@ -126,7 +129,7 @@ class uvot_runner(object):
 
             iv.filepath = filepath
             iv.setup_frame()
-            x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
+            x = input('Viewing %s. Hit Enter to continue.' %filepath)
 
 
     def uvot_measurer(self,measure=True,default_fs = True):
@@ -200,7 +203,7 @@ def main():
     parser.add_argument('-c',default=None,help='Specify coordinates for the source of interest.')
     parser.add_argument('-s',default=None,help='Specify the name for the source of interest. Ignored if -c is specified.')
     parser.add_argument('-ebv',default=None,help='User-specified E(B-V) value. Will query IRSA database, if not specified.')
-    parser.add_argument('-date_range',default='1990-01-01,2020-01-01',help='Comma-separated beginning and end of date(time) range to average images for SED construction. Format is somewhat flexible, but try \'YYYY-MM-DD HH:MM,YYYY-MM-DD HH:MM\'')
+    parser.add_argument('-date_range',default='1990-01-01,2050-01-01',help='Comma-separated beginning and end of date(time) range to average images for SED construction. Format is somewhat flexible, but try \'YYYY-MM-DD HH:MM,YYYY-MM-DD HH:MM\'')
     parser.add_argument('--check',action='store_true',default=False,help='View all images with the source marked to check observation quality.')
     parser.add_argument('--detect',action='store_true',default=False,help='Run UVOTDETECT on all images.')
     parser.add_argument('--measure',action='store_true',default=False,help='Run UVOTSOURCE on all images to get photometry.')
@@ -211,16 +214,17 @@ def main():
     #use all observations in the provided directory unless a specific obs is requested
     if args.f:
         filedirs = np.genfromtxt(args.f,dtype=str)
-        tmppaths = [glob.glob('%s/uvot/image/*sk.img.gz'%d) for d in filedirs ]
+        tmppaths = [glob.glob('%s/uvot/image/*sk.img*'%d) for d in filedirs ]
         filepaths = [path for paths in tmppaths for path in paths]
-        print filepaths
+        print(filepaths)
     elif not args.obs:
-        filepaths = glob.glob('%s/000*/uvot/image/*sk.img.gz' %args.p)#setting up filepaths
+        filepaths = glob.glob('%s/000*/uvot/image/*sk.img*' %args.p)#setting up filepaths
     else:
         obspath = os.path.join(args.p,str(args.obs))
+        print(obspath)
         if os.path.exists(obspath):
-            filepaths = glob.glob('%s/uvot/image/*sk.img.gz'%obspath)
-            print 'Will use images from observation %s only' %args.obs
+            filepaths = glob.glob('%s/uvot/image/*sk.img*'%obspath)
+            print('Will use images from observation %s only' %args.obs)
         else:
             raise NameError('%s does not exist.' %obspath)
 
@@ -229,7 +233,7 @@ def main():
         raise parser.error('Nothing to do. Use --detect, --check, --measure, or --extract_only flags for desired operations or -h for help.')
 
     if args.sed and args.date_range == '1990-01-01,2020-01-01':
-        print 'Option -date_range not specified. Will use all provided observations for SED.'
+        print('Option -date_range not specified. Will use all provided observations for SED.')
 
 
     #run all the wrappers, though unless --detect --check or --measure are given, nothing will happen!
@@ -247,8 +251,8 @@ def main():
         runner.query_for_source_coords(args.s)
     else:
         prime_source = True
-        print 'Source not specified by either -c or -s option. Will make user select the source location interactively.'
-        print 'Quit (ctrl-C) and specifiy source name with -s or source coordinates with -c options if the source is known.'
+        print('Source not specified by either -c or -s option. Will make user select the source location interactively.')
+        print('Quit (ctrl-C) and specifiy source name with -s or source coordinates with -c options if the source is known.')
 
     #get user to identify background region (and source region if coordinates or source name are not supplied)
 
@@ -257,7 +261,7 @@ def main():
         runner.uvot_detecter()
 
     if args.check:
-        print 'User selected coordinates will only be used if region files are missing.'
+        print('User selected coordinates will only be used if region files are missing.')
         runner.uvot_primer(prime_source=prime_source)
         runner.uvot_checker()
 

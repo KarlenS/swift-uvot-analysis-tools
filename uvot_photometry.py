@@ -40,7 +40,7 @@ class MeasureSource(object):
             self.obs = filename[8:23]
             self.band = filename[5:7]
 
-    def correct_extinction(self, val, filtr, EBminV = None, mag = False):
+    def correct_extinction(self, val, filtr, EBminV = None, mag = False, SFD=False):
 
         '''Function to correct for Galactic extinction using values from IRSA
 
@@ -66,25 +66,32 @@ class MeasureSource(object):
             http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/YorkExtinctionSolver/coefficients.cgi        
         '''
 
-        #central_wav = {'uu':3465.,'w1':2600.,'m2':2246.,'w2':1928.,'bb':4392.,'vv':5468.}
-        bwidth = {'uu':785.,'w1':693.,'m2':498.,'w2':657.,'bb':975.,'vv':769.}
+        central_wav = {'uu':3465.,'w1':2600.,'m2':2246.,'w2':1928.,'bb':4392.,'vv':5468.}
+        #R_lambda = {'uu':4.89172,'w1':6.55663,'m2':9.15389,'w2':8.10997,'bb':4.00555,'vv':2.99692}
+        #S&F from https://irsa.ipac.caltech.edu/workspace/TMP_N5G0bm_15533/DUST/VERJ0521+211.v0001/extinction.html
         R_lambda = {'uu':4.89172,'w1':6.55663,'m2':9.15389,'w2':8.10997,'bb':4.00555,'vv':2.99692}
 
 
         #query for the E(B-V) value, unless user specifies one
         if not EBminV:
             from astroquery.irsa_dust import IrsaDust
-            extTable = IrsaDust.get_extinction_table(self.source_coords)
-            EBminV = np.median(extTable['A_SandF']/extTable['A_over_E_B_V_SandF'])
+            #extTable = IrsaDust.get_extinction_table(self.source_coords)
+            #EBminV = np.median(extTable['A_SandF']/extTable['A_over_E_B_V_SandF'])
+            extTable = IrsaDust.get_query_table(self.source_coords, section='ebv')
+            if SFD: 
+                EBminV = extTable['ext SFD ref'][0]
+            else:
+                EBminV = extTable['ext SandF ref'][0]
+
 
         #calculate extinction magnitude
         A_lambda = R_lambda[filtr]*EBminV
+        print("E(B-V) = {}; A_lambda = {}".format(EBminV, A_lambda))
 
         if mag:
             return val - R_lambda[filtr]*EBminV
         else:
-            return val*bwidth[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
-            #return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
+            return val*central_wav[filtr]*10**(R_lambda[filtr]*EBminV/2.5)
 
 
     def run_uvotsource(self):
@@ -104,6 +111,8 @@ class MeasureSource(object):
 
         tmp = subprocess.Popen(['uvotsource','image=%s' %self.filepath,'srcreg=%s' %srcregfile, 'bkgreg=%s' %bkgregfile, 
                                 'outfile=%s' %uvotsourcefile,'chatter=0','sigma=3','clobber=YES'], stdout=subprocess.PIPE)
+
+        print(tmp)
         
         return tmp.communicate()
 
@@ -125,7 +134,7 @@ class MeasureSource(object):
             else:
                 aspflag = False
         except KeyError:
-            print 'Assuming apsflag is fine for %s' %self.filepath
+            print('Assuming apsflag is fine for %s' %self.filepath)
             aspflag = True
 
         mainfits.close()
@@ -143,14 +152,14 @@ class MeasureSource(object):
         try:
             data = fits.getdata(uvotsourcefile)
         except IOError:
-            print '''%s not found. Make sure to run uvotsource beforehand or this will get annoying.\n
-                   Will try running uvotsource now and will skip this observation if it fails.''' %uvotsourcefile
+            print('''%s not found. Make sure to run uvotsource beforehand or this will get annoying.\n
+                   Will try running uvotsource now and will skip this observation if it fails.''' %uvotsourcefile)
             tmp = self.run_uvotsource()
             try:
                 data = fits.getdata(uvotsourcefile)
-                print 'Running uvotsource worked.'
+                print('Running uvotsource worked.')
             except IOError:
-                print 'Failed again... Skipping %s' %self.filepath
+                print('Failed again... Skipping %s' %self.filepath)
                 return None
 
 
