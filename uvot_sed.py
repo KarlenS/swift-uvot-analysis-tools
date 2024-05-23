@@ -42,11 +42,14 @@ class MakeSED(object):
             extfile = '%s_%s-%s_%s' %(filtr,startdate.mjd,enddate.mjd,sumfile)
             combfile = 'comb_%s' % extfile
             nfiles = 0
-            print 'Working on %s filter' % (filtr)
-
+            print('Working on %s filter' % (filtr))
             for f in tqdm(paths):
+                print(f)
+            for f in tqdm(paths):
+                print(f)
                 measurer = MeasureSource(f)
                 obstime,aspflag = measurer.get_observation_time()
+                #print(obstime, startdate.iso,enddate.iso)
                 if (obstime-startdate).value > 0 and (enddate-obstime).value > 0:
                     #print '%s is within the time range.' %f
                     nfiles += 1
@@ -61,11 +64,11 @@ class MakeSED(object):
                     elif aspflag:
                         self.runFappend(f,extfile)
                     else:
-                        print 'FUUUUCK THIS FILE: %s' %f
+                        print('FUUUUCK THIS FILE: %s' %f)
                         continue
 
             if nfiles == 0:
-                print 'Filter %s had no files to combine' %filtr
+                print('Filter %s had no files to combine' %filtr)
                 continue
             else:
 
