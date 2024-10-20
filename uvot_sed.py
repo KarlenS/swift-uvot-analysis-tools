@@ -1,4 +1,12 @@
 #!/Users/karlen/anaconda2/envs/astroconda/bin/python
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import os
 import re
 import subprocess
@@ -23,7 +31,7 @@ class MakeSED(object):
         fdict = dict.fromkeys(self.filters,np.array([],dtype=str))
         filelistarr = np.array(self.filelist)
 
-        for filtr in fdict.keys():
+        for filtr in list(fdict.keys()):
             indx = np.where([re.search(filtr, path) for path in filelistarr])[0]
         
             if np.size(indx) > 0:
@@ -37,12 +45,12 @@ class MakeSED(object):
         sumfile = 'summed_image.fits'
         sumfilegz = 'summed_image.gz'
         filepaths = []
-        for filtr,paths in self.sortedpaths.items():
+        for filtr,paths in list(self.sortedpaths.items()):
             firstfile = True
             extfile = '%s_%s-%s_%s' %(filtr,startdate.mjd,enddate.mjd,sumfile)
             combfile = 'comb_%s' % extfile
             nfiles = 0
-            print 'Working on %s filter' % (filtr)
+            print('Working on %s filter' % (filtr))
 
             for f in tqdm(paths):
                 measurer = MeasureSource(f)
@@ -61,11 +69,11 @@ class MakeSED(object):
                     elif aspflag:
                         self.runFappend(f,extfile)
                     else:
-                        print 'FUUUUCK THIS FILE: %s' %f
+                        print('FUUUUCK THIS FILE: %s' %f)
                         continue
 
             if nfiles == 0:
-                print 'Filter %s had no files to combine' %filtr
+                print('Filter %s had no files to combine' %filtr)
                 continue
             else:
 

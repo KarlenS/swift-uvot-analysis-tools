@@ -1,4 +1,13 @@
 #!/Users/karlen/anaconda2/envs/astroconda/bin/python
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import *
+from past.utils import old_div
 from astropy.io import fits
 import matplotlib.pyplot as plt
 import argparse
@@ -16,14 +25,14 @@ def plotSED(dat,axs,color='black',label=None):
 
     axs.errorbar(None,None,fmt='o',color=color,label=label,alpha=0.7)
 
-    for keys,vals in central_wav.items():
+    for keys,vals in list(central_wav.items()):
         ind = dat['filter'] == keys
         flux = dat[ind]['FluxDensity']
         ferr = dat[ind]['FluxDensityErr']
         fluxcorr = dat[ind]['FluxExtCorr']
         ferrcorr = dat[ind]['FluxExtCorrErr']
         if True in ind:
-            axs.errorbar(c/vals,fluxcorr,yerr=ferrcorr, fmt='o',color=color,alpha=0.7)
+            axs.errorbar(old_div(c,vals),fluxcorr,yerr=ferrcorr, fmt='o',color=color,alpha=0.7)
 
     axs.set_ylabel(r'Flux (ExtCorr) [ erg cm$^{-2}$ s$^{-1}$ ]')
     axs.set_xlabel(r'Frequency [ Hz ]')

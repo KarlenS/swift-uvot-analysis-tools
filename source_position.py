@@ -3,6 +3,14 @@
 '''
 Module for determining the source position using ``UVOTDETECT`` and for generating source and background region files used in the photometry.
 '''
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import os
 import os.path as path
 import glob
@@ -45,7 +53,7 @@ class PositionExtractor(object):
         try:
             os.remove(self.detect)
         except OSError:
-            print 'File %s does not exist. Cannot delete what does not exist.' %self.detect
+            print('File %s does not exist. Cannot delete what does not exist.' %self.detect)
             pass
 
     def createRegionFiles(self):
@@ -89,7 +97,7 @@ class PositionExtractor(object):
         try:
             data = fits.getdata(self.detect)
         except:
-            print 'File %s does not exist. %s is likely a multiple extension file. Attempting to combine extensions and rerunning.' %(self.detect,self.filepath)
+            print('File %s does not exist. %s is likely a multiple extension file. Attempting to combine extensions and rerunning.' %(self.detect,self.filepath))
             try:
                 # running uvotimsum to combine multiple extensions
                 # to keep things relatively clean, changing filepath to combined while remembering orignal name
@@ -103,10 +111,10 @@ class PositionExtractor(object):
 
                 # once we have the data from combined, changing back filepath to original
                 self.filepath = orig
-                print 'Combining and rerunning seems to have worked!'
+                print('Combining and rerunning seems to have worked!')
 
             except:
-                print 'Attempt to combine extensions failed. Defaulting to NED/SIMBAD position.'
+                print('Attempt to combine extensions failed. Defaulting to NED/SIMBAD position.')
                 self.createRegionFiles()
 
         if np.size(data) > 0:
@@ -119,12 +127,12 @@ class PositionExtractor(object):
                 self.source_coords = SkyCoord('%s %s' %(data[source_ind]['RA'],data[source_ind]['DEC']),unit=(u.deg, u.deg))
                 self.createRegionFiles()
             else:
-                print 'Nearest source too far away (more than 2 arcsecs)! Defaulting to SIMBAD coords.'
+                print('Nearest source too far away (more than 2 arcsecs)! Defaulting to SIMBAD coords.')
                 self.createRegionFiles()
 
         else:
             self.createRegionFiles()
-            print 'No sources were detected in %s! Defaulting to SIMBAD coords.' %self.filepath
+            print('No sources were detected in %s! Defaulting to SIMBAD coords.' %self.filepath)
 
     def run_uvotdetect(self,exp='exp.fits'):
         '''Wrapper to run ``UVOTDETECT``. The ``filepath`` attribute is used for output filename generation. 

@@ -3,6 +3,15 @@
 '''
 Use ``UVOTSOURCE`` to get aperture photometry from UVOT images.
 '''
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
+from past.utils import old_div
 import os.path as path
 import numpy as np
 import subprocess
@@ -74,7 +83,7 @@ class MeasureSource(object):
         if not EBminV:
             from astroquery.irsa_dust import IrsaDust
             extTable = IrsaDust.get_extinction_table(self.source_coords)
-            EBminV = np.median(extTable['A_SandF']/extTable['A_over_E_B_V_SandF'])
+            EBminV = np.median(old_div(extTable['A_SandF'],extTable['A_over_E_B_V_SandF']))
 
         #calculate extinction magnitude
         A_lambda = R_lambda[filtr]*EBminV
@@ -123,12 +132,12 @@ class MeasureSource(object):
             else:
                 aspflag = False
         except KeyError:
-            print 'Assuming apsflag is fine for %s' %self.filepath
+            print('Assuming apsflag is fine for %s' %self.filepath)
             aspflag = True
 
         mainfits.close()
 
-        return obs_start + (obs_end - obs_start)/2,aspflag 
+        return obs_start + old_div((obs_end - obs_start),2),aspflag 
 
     def get_observation_data(self):
         '''Parse the output of ``UVOTSOURCE`` to extract essential photometry information.
@@ -141,14 +150,14 @@ class MeasureSource(object):
         try:
             data = fits.getdata(uvotsourcefile)
         except IOError:
-            print '''%s not found. Make sure to run uvotsource beforehand or this will get annoying.\n
-                   Will try running uvotsource now and will skip this observation if it fails.''' %uvotsourcefile
+            print('''%s not found. Make sure to run uvotsource beforehand or this will get annoying.\n
+                   Will try running uvotsource now and will skip this observation if it fails.''' %uvotsourcefile)
             tmp = self.run_uvotsource()
             try:
                 data = fits.getdata(uvotsourcefile)
-                print 'Running uvotsource worked.'
+                print('Running uvotsource worked.')
             except IOError:
-                print 'Failed again... Skipping %s' %self.filepath
+                print('Failed again... Skipping %s' %self.filepath)
                 return None
 
 

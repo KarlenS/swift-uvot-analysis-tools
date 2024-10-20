@@ -11,6 +11,18 @@ The process consists of three primary steps:
     TODO:
         Add automatic data downloading (possibly with astroquery.heasarc)
 '''
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import input
+from builtins import next
+from builtins import str
+from builtins import *
+from builtins import object
+from past.utils import old_div
 import os.path
 import sys
 import glob
@@ -102,7 +114,7 @@ class uvot_runner(object):
         pos.bkg_coords = self.bkg_coords
 
         for filepath in self.filepaths:
-            print 'working on %s...' %filepath 
+            print('working on %s...' %filepath) 
             pos.filepath = filepath
             out, err = pos.run_uvotdetect()
             pos.getNearestSource()
@@ -126,7 +138,7 @@ class uvot_runner(object):
 
             iv.filepath = filepath
             iv.setup_frame()
-            x = raw_input('Viewing %s. Hit Enter to continue.' %filepath)
+            x = input('Viewing %s. Hit Enter to continue.' %filepath)
 
 
     def uvot_measurer(self,measure=True,default_fs = True):
@@ -153,12 +165,12 @@ class uvot_runner(object):
         ptab['MJD'].unit = u.d
         ptab['Mag'].unit = u.mag
         ptab['MagErr'].unit = u.mag
-        ptab['FluxDensity'].unit = u.erg/u.cm/u.cm/u.second/u.AA
-        ptab['FluxDensityErr'].unit = u.erg/u.cm/u.cm/u.second/u.AA
+        ptab['FluxDensity'].unit = old_div(old_div(old_div(old_div(u.erg,u.cm),u.cm),u.second),u.AA)
+        ptab['FluxDensityErr'].unit = old_div(old_div(old_div(old_div(u.erg,u.cm),u.cm),u.second),u.AA)
         ptab['FluxDensityJy'].unit = u.Jy
         ptab['FluxDensityJyErr'].unit = u.Jy
-        ptab['FluxExtCorr'].unit = u.erg/u.cm/u.cm/u.second 
-        ptab['FluxExtCorrErr'].unit = u.erg/u.cm/u.cm/u.second
+        ptab['FluxExtCorr'].unit = old_div(old_div(old_div(u.erg,u.cm),u.cm),u.second) 
+        ptab['FluxExtCorrErr'].unit = old_div(old_div(old_div(u.erg,u.cm),u.cm),u.second)
 
         #run through all image files to perform and/or extract photometry
         for filepath in tqdm(self.filepaths):
@@ -213,14 +225,14 @@ def main():
         filedirs = np.genfromtxt(args.f,dtype=str)
         tmppaths = [glob.glob('%s/uvot/image/*sk.img.gz'%d) for d in filedirs ]
         filepaths = [path for paths in tmppaths for path in paths]
-        print filepaths
+        print(filepaths)
     elif not args.obs:
         filepaths = glob.glob('%s/000*/uvot/image/*sk.img.gz' %args.p)#setting up filepaths
     else:
         obspath = os.path.join(args.p,str(args.obs))
         if os.path.exists(obspath):
             filepaths = glob.glob('%s/uvot/image/*sk.img.gz'%obspath)
-            print 'Will use images from observation %s only' %args.obs
+            print('Will use images from observation %s only' %args.obs)
         else:
             raise NameError('%s does not exist.' %obspath)
 
@@ -229,7 +241,7 @@ def main():
         raise parser.error('Nothing to do. Use --detect, --check, --measure, or --extract_only flags for desired operations or -h for help.')
 
     if args.sed and args.date_range == '1990-01-01,2020-01-01':
-        print 'Option -date_range not specified. Will use all provided observations for SED.'
+        print('Option -date_range not specified. Will use all provided observations for SED.')
 
 
     #run all the wrappers, though unless --detect --check or --measure are given, nothing will happen!
@@ -247,8 +259,8 @@ def main():
         runner.query_for_source_coords(args.s)
     else:
         prime_source = True
-        print 'Source not specified by either -c or -s option. Will make user select the source location interactively.'
-        print 'Quit (ctrl-C) and specifiy source name with -s or source coordinates with -c options if the source is known.'
+        print('Source not specified by either -c or -s option. Will make user select the source location interactively.')
+        print('Quit (ctrl-C) and specifiy source name with -s or source coordinates with -c options if the source is known.')
 
     #get user to identify background region (and source region if coordinates or source name are not supplied)
 
@@ -257,7 +269,7 @@ def main():
         runner.uvot_detecter()
 
     if args.check:
-        print 'User selected coordinates will only be used if region files are missing.'
+        print('User selected coordinates will only be used if region files are missing.')
         runner.uvot_primer(prime_source=prime_source)
         runner.uvot_checker()
 
